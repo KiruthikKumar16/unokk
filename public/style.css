@@ -16,17 +16,7 @@ body {
     position: relative;
 }
 
-/* Semi-transparent overlay for better text readability */
-body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.3);
-    z-index: -1;
-}
+/* Removed overlay to show background clearly */
 
 @keyframes float {
     0%, 100% { transform: translateY(0px) rotate(0deg); }
