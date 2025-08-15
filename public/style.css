@@ -178,7 +178,8 @@ body {
 }
 
 .deck {
-    background: linear-gradient(135deg, #FF69B4 0%, #FF1493 100%);
+    background: url('card back.png') no-repeat center center;
+    background-size: cover;
     position: relative;
 }
 
@@ -196,22 +197,6 @@ body {
 @keyframes deckShimmer {
     0%, 100% { transform: translateX(-100%); }
     50% { transform: translateX(100%); }
-}
-
-.deck::after {
-    content: "🎀\AUNO";
-    font-size: 14px;
-    font-weight: 800;
-    text-align: center;
-    white-space: pre;
-    line-height: 1.2;
-    color: white;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    z-index: 2;
 }
 
 .deck:hover {
@@ -303,6 +288,13 @@ body {
     background-position: center;
     overflow: hidden;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.card-back {
+    background: url('card back.png') no-repeat center center;
+    background-size: cover;
+    color: white;
+    position: relative;
 }
 
 .card::before {
