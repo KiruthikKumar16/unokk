@@ -178,7 +178,7 @@ body {
 }
 
 .deck {
-    background: url('card back.png') no-repeat center center;
+    background: url('cardbg.jpeg') no-repeat center center;
     background-size: cover;
     position: relative;
 }
@@ -291,7 +291,7 @@ body {
 }
 
 .card-back {
-    background: url('card back.png') no-repeat center center;
+    background: url('cardbg.jpeg') no-repeat center center;
     background-size: cover;
     color: white;
     position: relative;
