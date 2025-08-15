@@ -24,6 +24,8 @@ A real-time multiplayer UNO game that supports 2-10 players online. Built with N
 
 ## Installation
 
+### Local Development
+
 1. **Clone or download this repository**
    ```bash
    git clone <repository-url>
@@ -47,6 +49,17 @@ A real-time multiplayer UNO game that supports 2-10 players online. Built with N
 
 4. **Open your browser**
    Navigate to `http://localhost:3000`
+
+### 🚀 Deployment
+
+**⚠️ Important**: This game requires a real server for multiplayer functionality. Vercel and other serverless platforms will NOT work.
+
+**Recommended deployment options:**
+- **Heroku** (Free tier available)
+- **Railway** (Free tier available) 
+- **Render** (Free tier available)
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
 
 ## How to Play
 

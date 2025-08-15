@@ -129,7 +129,30 @@ class UnoClient {
         }
         
         console.log('Initializing Socket.IO connection...');
-        this.socket = io();
+        
+        // Socket.IO connection options
+        const socketOptions = {
+            transports: ['websocket', 'polling'],
+            timeout: 10000,
+            forceNew: true
+        };
+        
+        // Determine server URL based on environment
+        let serverUrl = '';
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            // Local development
+            serverUrl = window.location.origin;
+        } else {
+            // Deployed environment - you need to update this with your actual server URL
+            // For now, we'll try to connect to the same origin
+            serverUrl = window.location.origin;
+            
+            // If you're deploying to a separate server, uncomment and update this:
+            // serverUrl = 'https://your-server-url.herokuapp.com';
+        }
+        
+        console.log('Connecting to server:', serverUrl);
+        this.socket = io(serverUrl, socketOptions);
         
         // Connection timeout
         const connectionTimeout = setTimeout(() => {
