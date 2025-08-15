@@ -281,6 +281,11 @@ class UnoClient {
             this.hideLoading();
             this.showLobby();
             this.updateLobby();
+            
+            // Automatically hide the game over modal after 2 seconds
+            setTimeout(() => {
+                this.hideGameOver();
+            }, 2000);
         });
         
         this.socket.on('error', (message) => {
