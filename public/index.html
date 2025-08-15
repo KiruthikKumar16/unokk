@@ -18,7 +18,6 @@
                 
                 <div class="menu-card">
                     <div class="input-group">
-                        <label for="playerName">Your Kawaii Name:</label>
                         <input type="text" id="playerName" placeholder="Enter your cute name 🎀" maxlength="20">
                     </div>
                     
@@ -38,12 +37,18 @@
                     <span class="close" id="closeJoinModal">&times;</span>
                 </div>
                 <div class="modal-body">
-                    <div class="input-group">
-                        <label for="roomCode">Magic Room Code:</label>
-                        <input type="text" id="roomCode" placeholder="Enter 6-digit kawaii code ✨" maxlength="6">
-                        <button class="paste-room-btn" onclick="pasteRoomCode()">📋 Paste Code</button>
+                    <div class="join-room-form">
+                        <div class="form-row">
+                            <label for="roomCode">Magic Room Code:</label>
+                        </div>
+                        <div class="form-row">
+                            <input type="text" id="roomCode" placeholder="Enter 6-digit kawaii code ✨" maxlength="6">
+                        </div>
+                        <div class="form-row">
+                            <button class="paste-room-btn" onclick="pasteRoomCode()">📋 Paste Code</button>
+                            <button id="joinGameBtn" class="btn btn-primary">💕 Join Game</button>
+                        </div>
                     </div>
-                    <button id="joinGameBtn" class="btn btn-primary">💕 Join Game</button>
                 </div>
             </div>
         </div>

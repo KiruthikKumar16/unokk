@@ -56,6 +56,7 @@ class UnoClient {
         this.cardsContainer = document.getElementById('cardsContainer');
         this.drawCardBtn = document.getElementById('drawCardBtn');
         this.unoBtn = document.getElementById('unoBtn');
+        this.gameInfo = document.querySelector('.game-info');
         
         // Modals
         this.colorPickerModal = document.getElementById('colorPickerModal');
@@ -1059,9 +1060,16 @@ class UnoClient {
 
     updateCurrentPlayerInfo() {
         console.log('Updating current player info:', this.gameState);
+        
+        if (!this.gameState || !this.gameState.players || this.gameState.currentPlayer === undefined) {
+            console.log('Game state not ready for current player update');
+            return;
+        }
+        
         const currentPlayer = this.gameState.players[this.gameState.currentPlayer];
         console.log('Current player:', currentPlayer);
-        if (currentPlayer) {
+        
+        if (currentPlayer && this.currentPlayerName) {
             let playerText = currentPlayer.name;
             
             // Check if it's the current player's turn
@@ -1070,9 +1078,13 @@ class UnoClient {
             
             if (isMyTurn) {
                 playerText = 'You';
-                this.gameInfo.classList.add('your-turn');
+                if (this.gameInfo) {
+                    this.gameInfo.classList.add('your-turn');
+                }
             } else {
-                this.gameInfo.classList.remove('your-turn');
+                if (this.gameInfo) {
+                    this.gameInfo.classList.remove('your-turn');
+                }
             }
             
             // Add draw penalty info
@@ -1083,16 +1095,32 @@ class UnoClient {
             console.log('Setting player text to:', playerText);
             this.currentPlayerName.textContent = playerText;
         } else {
-            console.log('No current player found');
+            console.log('No current player found or currentPlayerName element missing');
+            if (this.currentPlayerName) {
+                this.currentPlayerName.textContent = 'No player';
+            }
         }
     }
 
     updateDirection() {
+        console.log('Updating direction:', this.gameState?.direction);
+        
+        if (!this.directionIndicator) {
+            console.log('Direction indicator element not found');
+            return;
+        }
+        
         const arrow = this.directionIndicator.querySelector('.arrow');
-        if (this.gameState.direction === 1) {
-            arrow.textContent = '→';
+        if (arrow) {
+            if (this.gameState && this.gameState.direction === 1) {
+                arrow.textContent = '→';
+                console.log('Direction set to right (→)');
+            } else {
+                arrow.textContent = '←';
+                console.log('Direction set to left (←)');
+            }
         } else {
-            arrow.textContent = '←';
+            console.log('Arrow element not found in direction indicator');
         }
     }
 
@@ -1279,6 +1307,22 @@ class UnoClient {
         // Values: 0-9, +2, b (block), r (reverse)
         // Wild cards: wcc (wild color change), w+4 (wild plus 4)
         
+        console.log('getCardImage called with card:', card);
+        
+        // Handle wild cards first (they don't have a color prefix)
+        if (card.type === 'wild') {
+            if (card.value === 'wild') {
+                console.log('Wild card detected, using wcc.png');
+                return 'cards/wcc.png'; // wild color change
+            } else if (card.value === 'draw4') {
+                console.log('Wild draw 4 detected, using w+4.png');
+                return 'cards/w+4.png'; // wild plus 4
+            } else {
+                console.log('Unknown wild card value:', card);
+                return null;
+            }
+        }
+        
         let colorPrefix = '';
         let valueSuffix = '';
         
@@ -1318,16 +1362,6 @@ class UnoClient {
                 default:
                     console.log('Unknown action value for card:', card);
                     return null;
-            }
-        } else if (card.type === 'wild') {
-            if (card.value === 'wild') {
-                console.log('Wild card detected, using wcc.png');
-                return 'cards/wcc.png'; // wild color change
-            } else if (card.value === 'draw4') {
-                console.log('Wild draw 4 detected, using w+4.png');
-                return 'cards/w+4.png'; // wild plus 4
-            } else {
-                console.log('Unknown wild card value:', card);
             }
         }
         
