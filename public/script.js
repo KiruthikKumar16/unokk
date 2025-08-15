@@ -511,6 +511,9 @@ class UnoClient {
     showLobby() {
         this.showScreen(this.lobby);
         this.roomCodeDisplay.textContent = this.roomId;
+        
+        // Add click-to-copy functionality to room code
+        this.setupRoomCodeCopy();
     }
 
     showGameScreen() {
@@ -601,6 +604,51 @@ class UnoClient {
 
     hideError() {
         this.errorMessage.classList.remove('show');
+    }
+
+    setupRoomCodeCopy() {
+        // Remove existing click listener to avoid duplicates
+        this.roomCodeDisplay.removeEventListener('click', this.copyRoomCode);
+        
+        // Add click listener for copying room code
+        this.roomCodeDisplay.addEventListener('click', this.copyRoomCode.bind(this));
+        
+        // Add visual indication that it's clickable
+        this.roomCodeDisplay.style.cursor = 'pointer';
+        this.roomCodeDisplay.title = 'Click to copy room code';
+    }
+
+    copyRoomCode() {
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(this.roomId).then(() => {
+                this.showNotification('Room code copied! 📋');
+                this.sounds.notification();
+                
+                // Visual feedback
+                this.roomCodeDisplay.style.transform = 'scale(1.1)';
+                setTimeout(() => {
+                    this.roomCodeDisplay.style.transform = 'scale(1)';
+                }, 200);
+            }).catch(err => {
+                console.error('Failed to copy room code:', err);
+                this.showNotification('Failed to copy room code');
+            });
+        } else {
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = this.roomId;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                this.showNotification('Room code copied! 📋');
+                this.sounds.notification();
+            } catch (err) {
+                console.error('Fallback copy failed:', err);
+                this.showNotification('Failed to copy room code');
+            }
+            document.body.removeChild(textArea);
+        }
     }
 
     showNotification(message) {
