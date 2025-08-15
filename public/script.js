@@ -143,12 +143,14 @@ class UnoClient {
             // Local development
             serverUrl = window.location.origin;
         } else {
-            // Deployed environment - you need to update this with your actual server URL
-            // For now, we'll try to connect to the same origin
-            serverUrl = window.location.origin;
+            // Deployed environment - update this with your actual server URL
+            // Replace this URL with your actual deployed server URL
+            serverUrl = 'https://your-actual-server-url.railway.app'; // UPDATE THIS!
             
-            // If you're deploying to a separate server, uncomment and update this:
-            // serverUrl = 'https://your-server-url.herokuapp.com';
+            // Examples:
+            // serverUrl = 'https://your-app.railway.app';
+            // serverUrl = 'https://your-app.herokuapp.com';
+            // serverUrl = 'https://your-app.onrender.com';
         }
         
         console.log('Connecting to server:', serverUrl);
