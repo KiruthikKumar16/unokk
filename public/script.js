@@ -145,7 +145,7 @@ class UnoClient {
         } else {
             // Deployed environment - update this with your actual server URL
             // Replace this URL with your actual deployed server URL
-            serverUrl = 'https://your-actual-server-url.railway.app'; // UPDATE THIS!
+            serverUrl = 'https://web-production-b42fc.up.railway.app'; // Your Railway deployment
             
             // Examples:
             // serverUrl = 'https://your-app.railway.app';
