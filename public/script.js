@@ -257,8 +257,15 @@ class UnoClient {
             this.updateVoteDisplay(data.votes, data.totalPlayers);
             this.showNotification(`${data.votes}/${data.totalPlayers} players want to play again!`);
             
-            // If this player voted, show option to start new game
-            if (data.votedPlayers.includes(this.socket.id) && data.votes > 0) {
+            // If all players have voted, show automatic transition message
+            if (data.allVoted) {
+                this.showNotification('All players voted! Starting new game in 2 seconds...');
+                // Hide the "Start New Game" button since it will happen automatically
+                if (this.startNewGameBtn) {
+                    this.startNewGameBtn.style.display = 'none';
+                }
+            } else if (data.votedPlayers.includes(this.socket.id) && data.votes > 0) {
+                // Show option to start new game only if not all players have voted
                 this.showStartNewGameOption();
             }
         });

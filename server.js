@@ -194,12 +194,20 @@ class UnoGame {
     if (!this.gameEnded) return { success: false, error: 'Game has not ended yet' };
     
     this.playAgainVotes.add(playerId);
-    return { 
+    
+    const result = { 
       success: true, 
       votes: this.playAgainVotes.size,
       totalPlayers: this.players.length,
       votedPlayers: Array.from(this.playAgainVotes)
     };
+    
+    // Check if all players have voted
+    if (this.playAgainVotes.size === this.players.length) {
+      result.allVoted = true;
+    }
+    
+    return result;
   }
 
   getPlayAgainStatus() {
@@ -580,6 +588,15 @@ io.on('connection', (socket) => {
       if (result.success) {
         console.log(`Player ${socket.id} voted to play again. Votes: ${result.votes}/${result.totalPlayers}`);
         io.to(roomId).emit('playAgainVote', result);
+        
+        // If all players have voted, automatically start new game
+        if (result.allVoted) {
+          console.log('All players have voted, automatically starting new game');
+          setTimeout(() => {
+            game.resetGame();
+            io.to(roomId).emit('gameReset', game.getGameState());
+          }, 2000); // 2 second delay to show the final vote count
+        }
       } else {
         socket.emit('error', result.error);
       }
