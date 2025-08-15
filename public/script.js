@@ -783,18 +783,24 @@ class UnoClient {
     }
 
     callUno() {
+        console.log('callUno() called');
+        console.log('Is my turn:', this.isMyTurn());
+        console.log('Player hand:', this.playerHand);
+        console.log('Player hand length:', this.playerHand ? this.playerHand.length : 'undefined');
+        
         if (!this.isMyTurn()) {
             this.showNotification("It's not your turn!");
             return;
         }
         
-        // Check if player has exactly 1 card
-        const currentPlayer = this.gameState.players.find(p => p.id === this.socket.id);
-        if (currentPlayer && currentPlayer.hand && currentPlayer.hand.length === 1) {
+        // Check if player has exactly 1 card using the actual hand
+        if (this.playerHand && this.playerHand.length === 1) {
+            console.log('Calling UNO - player has 1 card');
             this.sounds.uno();
             this.socket.emit('callUno');
             this.showNotification('UNO!');
         } else {
+            console.log('Cannot call UNO - player has', this.playerHand ? this.playerHand.length : 'undefined', 'cards');
             this.showNotification('You can only call UNO when you have 1 card!');
         }
     }

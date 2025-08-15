@@ -695,18 +695,25 @@ io.on('connection', (socket) => {
     
     if (!game) return;
 
+    console.log(`UNO call received from player ${socket.id}`);
+
     // Check if it's the player's turn
     if (game.players[game.currentPlayer].id !== socket.id) {
+      console.log(`Player ${socket.id} tried to call UNO but it's not their turn`);
       socket.emit('error', "It's not your turn!");
       return;
     }
 
     const player = game.players.find(p => p.id === socket.id);
+    console.log(`Player ${player.name} hand length:`, player.hand ? player.hand.length : 'undefined');
+    console.log(`Player ${player.name} unoCall status:`, player.unoCall);
+    
     if (player && player.hand && player.hand.length === 1) {
       player.unoCall = true;
       io.to(roomId).emit('unoCalled', { playerId: socket.id, playerName: player.name });
       console.log(`Player ${player.name} called UNO!`);
     } else {
+      console.log(`Player ${player.name} tried to call UNO but has ${player.hand ? player.hand.length : 'undefined'} cards`);
       socket.emit('error', 'You can only call UNO when you have 1 card!');
     }
   });
