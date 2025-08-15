@@ -819,15 +819,18 @@ body {
 
 .players-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
     gap: 20px;
     margin-bottom: 25px;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .player-card {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 240, 245, 0.95) 100%);
-    padding: 20px;
-    border-radius: 20px;
+    padding: 15px;
+    border-radius: 18px;
     text-align: center;
     box-shadow: 0 8px 20px rgba(255, 105, 180, 0.15);
     border: 2px solid rgba(255, 182, 193, 0.4);
@@ -835,6 +838,10 @@ body {
     position: relative;
     overflow: hidden;
     backdrop-filter: blur(10px);
+    min-height: 140px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .player-card::before {
@@ -852,15 +859,15 @@ body {
 }
 
 .player-avatar {
-    width: 60px;
-    height: 60px;
+    width: 50px;
+    height: 50px;
     background: linear-gradient(135deg, #FF69B4 0%, #FF1493 100%);
     border-radius: 50%;
-    margin: 0 auto 15px;
+    margin: 0 auto 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 800;
     color: white;
     border: 3px solid rgba(255, 255, 255, 0.8);
@@ -870,22 +877,22 @@ body {
 .player-name {
     font-weight: 700;
     color: #FF69B4;
-    font-size: 1.1rem;
-    margin-bottom: 6px;
+    font-size: 1rem;
+    margin-bottom: 4px;
 }
 
 .player-status {
-    font-size: 12px;
+    font-size: 11px;
     color: #FFB6C1;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
     font-weight: 600;
 }
 
 .ready-status {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
-    padding: 4px 10px;
-    border-radius: 12px;
+    padding: 3px 8px;
+    border-radius: 10px;
     display: inline-block;
 }
 
@@ -1315,6 +1322,22 @@ body {
         top: 10px;
         left: 10px;
         padding: 10px;
+    }
+    
+    .players-grid {
+        grid-template-columns: 1fr;
+        max-width: 400px;
+    }
+    
+    .player-card {
+        padding: 12px;
+        min-height: 120px;
+    }
+    
+    .player-avatar {
+        width: 45px;
+        height: 45px;
+        font-size: 18px;
     }
 }
 
