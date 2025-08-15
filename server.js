@@ -282,20 +282,7 @@ class UnoGame {
       return { success: false, error: 'Card not in hand' };
     }
 
-    // Remove card from player's hand
-    player.hand.splice(cardIndex, 1);
-    
-    // Add card to discard pile
-    this.discardPile.push(card);
-    
-    // Update current color
-    if (card.color === 'wild') {
-      this.currentColor = chosenColor || 'red';
-    } else {
-      this.currentColor = card.color;
-    }
-
-    // Check for UNO call requirement BEFORE playing the card
+    // Check for UNO call requirement BEFORE removing the card
     let unoPenaltyMessage = '';
     if (player.hand.length === 1 && !player.unoCall) {
       // Player has 1 card but didn't call UNO - penalize them
@@ -310,6 +297,19 @@ class UnoGame {
       }
       console.log(`Player ${player.name} didn't call UNO! Drawing 2 penalty cards.`);
       unoPenaltyMessage = `${player.name} didn't call UNO! Drawing 2 penalty cards.`;
+    }
+
+    // Remove card from player's hand
+    player.hand.splice(cardIndex, 1);
+    
+    // Add card to discard pile
+    this.discardPile.push(card);
+    
+    // Update current color
+    if (card.color === 'wild') {
+      this.currentColor = chosenColor || 'red';
+    } else {
+      this.currentColor = card.color;
     }
 
     // Reset UNO call status after playing a card
