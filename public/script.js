@@ -1058,12 +1058,15 @@ class UnoClient {
     }
 
     updateCurrentPlayerInfo() {
+        console.log('Updating current player info:', this.gameState);
         const currentPlayer = this.gameState.players[this.gameState.currentPlayer];
+        console.log('Current player:', currentPlayer);
         if (currentPlayer) {
             let playerText = currentPlayer.name;
             
             // Check if it's the current player's turn
             const isMyTurn = currentPlayer.id === this.socket.id;
+            console.log('Is my turn:', isMyTurn, 'My socket ID:', this.socket.id, 'Current player ID:', currentPlayer.id);
             
             if (isMyTurn) {
                 playerText = 'You';
@@ -1077,7 +1080,10 @@ class UnoClient {
                 playerText += ` (Draw ${this.gameState.drawCount})`;
             }
             
+            console.log('Setting player text to:', playerText);
             this.currentPlayerName.textContent = playerText;
+        } else {
+            console.log('No current player found');
         }
     }
 
@@ -1139,11 +1145,13 @@ class UnoClient {
         
         // Get the Hello Kitty card image
         const cardImage = this.getCardImage(card);
+        console.log('Creating card element for:', card, 'Image:', cardImage);
         if (cardImage) {
             cardDiv.style.backgroundImage = `url('${cardImage}')`;
             cardDiv.style.backgroundSize = 'cover';
             cardDiv.style.backgroundPosition = 'center';
             cardDiv.style.backgroundRepeat = 'no-repeat';
+            console.log('Applied background image:', cardImage);
         }
         
         // Add kawaii card content (fallback for text)
@@ -1289,6 +1297,7 @@ class UnoClient {
                 colorPrefix = 'g';
                 break;
             default:
+                console.log('Unknown color for card:', card);
                 return null; // Unknown color
         }
         
@@ -1307,18 +1316,25 @@ class UnoClient {
                     valueSuffix = '+2';
                     break;
                 default:
+                    console.log('Unknown action value for card:', card);
                     return null;
             }
         } else if (card.type === 'wild') {
             if (card.value === 'wild') {
+                console.log('Wild card detected, using wcc.png');
                 return 'cards/wcc.png'; // wild color change
             } else if (card.value === 'draw4') {
+                console.log('Wild draw 4 detected, using w+4.png');
                 return 'cards/w+4.png'; // wild plus 4
+            } else {
+                console.log('Unknown wild card value:', card);
             }
         }
         
         // Return the image path
-        return `cards/${colorPrefix}${valueSuffix}.png`;
+        const imagePath = `cards/${colorPrefix}${valueSuffix}.png`;
+        console.log('Card image path:', imagePath, 'for card:', card);
+        return imagePath;
     }
 
     getCardName(card) {
