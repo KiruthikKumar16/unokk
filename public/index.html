@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UNO Online - Play with Friends</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Main Menu -->
+        <div id="mainMenu" class="screen active">
+            <div class="container">
+                <h1 class="title">UNO Online</h1>
+                <p class="subtitle">Play UNO with your friends online!</p>
+                
+                <div class="menu-card">
+                    <div class="input-group">
+                        <label for="playerName">Your Name:</label>
+                        <input type="text" id="playerName" placeholder="Enter your name" maxlength="20">
+                    </div>
+                    
+                    <div class="button-group">
+                        <button id="createRoomBtn" class="btn btn-primary">Create Room</button>
+                        <button id="joinRoomBtn" class="btn btn-secondary">Join Room</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Join Room Modal -->
+        <div id="joinRoomModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Join Room</h3>
+                    <span class="close" id="closeJoinModal">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group">
+                        <label for="roomCode">Room Code:</label>
+                        <input type="text" id="roomCode" placeholder="Enter 6-digit room code" maxlength="6">
+                    </div>
+                    <button id="joinGameBtn" class="btn btn-primary">Join Game</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Lobby -->
+        <div id="lobby" class="screen">
+            <div class="container">
+                <div class="lobby-header">
+                    <h2>Room: <span id="roomCodeDisplay"></span></h2>
+                    <button id="startGameBtn" class="btn btn-primary">Start Game</button>
+                </div>
+                
+                <div class="players-grid" id="playersGrid">
+                    <!-- Players will be populated here -->
+                </div>
+                
+                <div class="lobby-info">
+                    <p>Waiting for players... (2-10 players required)</p>
+                    <p>Share the room code with your friends!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="gameScreen" class="screen">
+            <div class="game-container">
+                <!-- Other Players -->
+                <div class="other-players" id="otherPlayers">
+                    <!-- Other players' hands will be shown here -->
+                </div>
+
+                <!-- Game Center -->
+                <div class="game-center">
+                    <div class="deck-area">
+                        <div class="deck" id="deck">
+                            <div class="card card-back"></div>
+                        </div>
+                        <div class="discard-pile" id="discardPile">
+                            <!-- Top card will be shown here -->
+                        </div>
+                    </div>
+                    
+                    <div class="game-info">
+                        <div class="current-player" id="currentPlayerInfo">
+                            Current Player: <span id="currentPlayerName"></span>
+                        </div>
+                        <div class="direction" id="directionIndicator">
+                            Direction: <span class="arrow">→</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Current Player's Hand -->
+                <div class="player-hand" id="playerHand">
+                    <div class="hand-title">Your Cards</div>
+                    <div class="cards-container" id="cardsContainer">
+                        <!-- Player's cards will be shown here -->
+                    </div>
+                    <div class="hand-actions">
+                        <button id="drawCardBtn" class="btn btn-action">Draw Card</button>
+                        <button id="unoBtn" class="btn btn-uno">UNO!</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Color Picker Modal -->
+        <div id="colorPickerModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Choose a Color</h3>
+                </div>
+                <div class="modal-body">
+                    <div class="color-options">
+                        <button class="color-btn red" data-color="red"></button>
+                        <button class="color-btn blue" data-color="blue"></button>
+                        <button class="color-btn green" data-color="green"></button>
+                        <button class="color-btn yellow" data-color="yellow"></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Over Modal -->
+        <div id="gameOverModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Game Over!</h3>
+                </div>
+                <div class="modal-body">
+                    <div class="winner-announcement">
+                        <h2 id="winnerName"></h2>
+                        <p>Congratulations! 🎉</p>
+                    </div>
+                    <div class="play-again-voting">
+                        <h4>Play Again?</h4>
+                        <div class="vote-status" id="voteStatus">
+                            <span id="voteCount">0/0</span> players want to play again
+                        </div>
+                        <div class="voting-actions">
+                            <button id="playAgainBtn" class="btn btn-primary">Yes, Play Again!</button>
+                            <button id="leaveGameBtn" class="btn btn-secondary">No, Leave Game</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="loading-overlay hidden">
+            <div class="spinner"></div>
+            <p>Connecting...</p>
+        </div>
+
+        <!-- Error Messages -->
+        <div id="errorMessage" class="error-message">
+            <span id="errorText"></span>
+            <button id="closeError" class="close-btn">&times;</button>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
