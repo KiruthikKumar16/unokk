@@ -437,6 +437,11 @@ class UnoClient {
             // Show game messages (skip, reverse, draw penalties)
             this.showNotification(message);
         });
+
+        this.socket.on('unoCalled', (data) => {
+            console.log('UNO called by:', data.playerName);
+            this.showNotification(`${data.playerName} called UNO! 🎉`);
+        });
         
         this.socket.on('gameWon', (data) => {
             const winner = this.gameState.players.find(p => p.id === data.winner);
@@ -778,9 +783,20 @@ class UnoClient {
     }
 
     callUno() {
-        // UNO call logic can be implemented here
-        this.sounds.uno();
-        this.showNotification('UNO!');
+        if (!this.isMyTurn()) {
+            this.showNotification("It's not your turn!");
+            return;
+        }
+        
+        // Check if player has exactly 1 card
+        const currentPlayer = this.gameState.players.find(p => p.id === this.socket.id);
+        if (currentPlayer && currentPlayer.hand && currentPlayer.hand.length === 1) {
+            this.sounds.uno();
+            this.socket.emit('callUno');
+            this.showNotification('UNO!');
+        } else {
+            this.showNotification('You can only call UNO when you have 1 card!');
+        }
     }
 
     isMyTurn() {

@@ -295,8 +295,33 @@ class UnoGame {
       this.currentColor = card.color;
     }
 
+    // Check for UNO call requirement BEFORE playing the card
+    let unoPenaltyMessage = '';
+    if (player.hand.length === 1 && !player.unoCall) {
+      // Player has 1 card but didn't call UNO - penalize them
+      const penaltyCards = [];
+      for (let i = 0; i < 2; i++) {
+        if (this.deck.length === 0) {
+          this.reshuffleDiscard();
+        }
+        const penaltyCard = this.deck.pop();
+        player.hand.push(penaltyCard);
+        penaltyCards.push(penaltyCard);
+      }
+      console.log(`Player ${player.name} didn't call UNO! Drawing 2 penalty cards.`);
+      unoPenaltyMessage = `${player.name} didn't call UNO! Drawing 2 penalty cards.`;
+    }
+
+    // Reset UNO call status after playing a card
+    player.unoCall = false;
+
     // Handle special cards
     const result = this.handleSpecialCard(card);
+    
+    // Add UNO penalty message if applicable
+    if (unoPenaltyMessage) {
+      result.message = unoPenaltyMessage;
+    }
     
     // Check for winner
     if (player.hand.length === 0) {
@@ -661,6 +686,28 @@ io.on('connection', (socket) => {
     } else {
       console.log(`Card play failed:`, result.error);
       socket.emit('error', result.error);
+    }
+  });
+
+  socket.on('callUno', () => {
+    const roomId = playerRooms.get(socket.id);
+    const game = rooms.get(roomId);
+    
+    if (!game) return;
+
+    // Check if it's the player's turn
+    if (game.players[game.currentPlayer].id !== socket.id) {
+      socket.emit('error', "It's not your turn!");
+      return;
+    }
+
+    const player = game.players.find(p => p.id === socket.id);
+    if (player && player.hand && player.hand.length === 1) {
+      player.unoCall = true;
+      io.to(roomId).emit('unoCalled', { playerId: socket.id, playerName: player.name });
+      console.log(`Player ${player.name} called UNO!`);
+    } else {
+      socket.emit('error', 'You can only call UNO when you have 1 card!');
     }
   });
 
