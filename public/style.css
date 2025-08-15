@@ -342,58 +342,32 @@ body {
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
-/* Enhanced Card Colors */
+/* Enhanced Card Colors - Now using Hello Kitty images */
 .card.red { 
-    background: linear-gradient(135deg, #FF6B9D 0%, #FF1744 50%, #FF6B9D 100%);
     color: white;
     border-color: rgba(255, 255, 255, 0.95);
     box-shadow: 0 8px 20px rgba(255, 107, 157, 0.4);
 }
 
-.card.red::before {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 182, 193, 0.9) 100%);
-}
-
 .card.blue { 
-    background: linear-gradient(135deg, #74B9FF 0%, #0984E3 50%, #74B9FF 100%);
     color: white;
     border-color: rgba(255, 255, 255, 0.95);
     box-shadow: 0 8px 20px rgba(116, 185, 255, 0.4);
 }
 
-.card.blue::before {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(116, 185, 255, 0.9) 100%);
-}
-
 .card.green { 
-    background: linear-gradient(135deg, #55EFC4 0%, #00B894 50%, #55EFC4 100%);
     color: white;
     border-color: rgba(255, 255, 255, 0.95);
     box-shadow: 0 8px 20px rgba(85, 239, 196, 0.4);
 }
 
-.card.green::before {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(85, 239, 196, 0.9) 100%);
-}
-
 .card.yellow { 
-    background: linear-gradient(135deg, #FDCB6E 0%, #E17055 50%, #FDCB6E 100%);
     color: white;
     border-color: rgba(255, 255, 255, 0.95);
     box-shadow: 0 8px 20px rgba(253, 203, 110, 0.4);
 }
 
-.card.yellow::before {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(253, 203, 110, 0.9) 100%);
-}
-
 .card.wild { 
-    background: linear-gradient(45deg, 
-        #FF6B9D 0%, #FF6B9D 20%, 
-        #74B9FF 20%, #74B9FF 40%, 
-        #55EFC4 40%, #55EFC4 60%, 
-        #FDCB6E 60%, #FDCB6E 80%,
-        #FF6B9D 80%, #FF6B9D 100%);
     color: white;
     font-size: 12px;
     font-weight: 800;

@@ -1114,7 +1114,16 @@ class UnoClient {
         const cardDiv = document.createElement('div');
         cardDiv.className = `card ${card.color}`;
         
-        // Add kawaii card content
+        // Get the Hello Kitty card image
+        const cardImage = this.getCardImage(card);
+        if (cardImage) {
+            cardDiv.style.backgroundImage = `url('${cardImage}')`;
+            cardDiv.style.backgroundSize = 'cover';
+            cardDiv.style.backgroundPosition = 'center';
+            cardDiv.style.backgroundRepeat = 'no-repeat';
+        }
+        
+        // Add kawaii card content (fallback for text)
         this.addKawaiiCardContent(cardDiv, card);
         
         // Check if card is playable
@@ -1171,7 +1180,15 @@ class UnoClient {
     }
 
     addKawaiiCardContent(cardDiv, card) {
-        // Create kawaii card designs
+        // Check if we have a Hello Kitty image for this card
+        const cardImage = this.getCardImage(card);
+        if (cardImage) {
+            // If we have an image, don't add text content - let the image show
+            cardDiv.innerHTML = '';
+            return;
+        }
+        
+        // Fallback to text content if no image is available
         if (card.type === 'number') {
             cardDiv.innerHTML = `
                 <div style="position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
@@ -1224,6 +1241,63 @@ class UnoClient {
                 `;
             }
         }
+    }
+
+    getCardImage(card) {
+        // Map card properties to Hello Kitty image filenames
+        // Format: [color][value].png
+        // Colors: p (pink), y (yellow), b (blue), g (green)
+        // Values: 0-9, +2, b (block), r (reverse)
+        // Wild cards: wcc (wild color change), w+4 (wild plus 4)
+        
+        let colorPrefix = '';
+        let valueSuffix = '';
+        
+        // Map colors
+        switch (card.color) {
+            case 'red':
+                colorPrefix = 'p'; // pink
+                break;
+            case 'yellow':
+                colorPrefix = 'y';
+                break;
+            case 'blue':
+                colorPrefix = 'b';
+                break;
+            case 'green':
+                colorPrefix = 'g';
+                break;
+            default:
+                return null; // Unknown color
+        }
+        
+        // Map values
+        if (card.type === 'number') {
+            valueSuffix = card.value.toString();
+        } else if (card.type === 'action') {
+            switch (card.value) {
+                case 'skip':
+                    valueSuffix = 'b'; // block
+                    break;
+                case 'reverse':
+                    valueSuffix = 'r';
+                    break;
+                case 'draw2':
+                    valueSuffix = '+2';
+                    break;
+                default:
+                    return null;
+            }
+        } else if (card.type === 'wild') {
+            if (card.value === 'wild') {
+                return 'cards/wcc.png'; // wild color change
+            } else if (card.value === 'draw4') {
+                return 'cards/w+4.png'; // wild plus 4
+            }
+        }
+        
+        // Return the image path
+        return `cards/${colorPrefix}${valueSuffix}.png`;
     }
 
     getCardName(card) {
