@@ -8,8 +8,18 @@ class UnoClient {
         this.playerName = '';
         this.roomId = '';
         
+        // Audio system
+        this.audioEnabled = true;
+        this.musicVolume = 0.3;
+        this.sfxVolume = 0.5;
+        this.backgroundMusic = null;
+        this.sounds = {};
+        
         this.initializeElements();
         this.bindEvents();
+        this.initializeAudio();
+        this.createFloatingElements();
+        this.createAudioControls();
         this.connectSocket();
         console.log('UNO Client initialized');
     }
@@ -118,6 +128,188 @@ class UnoClient {
         this.playerNameInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.createRoom();
         });
+        
+        // Add kawaii click effects
+        document.addEventListener('click', (e) => {
+            this.createClickEffect(e.clientX, e.clientY);
+        });
+    }
+
+    initializeAudio() {
+        // Initialize background music
+        this.backgroundMusic = new Audio();
+        this.backgroundMusic.loop = true;
+        this.backgroundMusic.volume = this.musicVolume;
+        
+        // Create audio context for Web Audio API sounds
+        try {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {
+            console.log('Web Audio API not supported');
+        }
+        
+        // Initialize sound effects with kawaii tones
+        this.initializeSounds();
+    }
+
+    initializeSounds() {
+        // Create kawaii sound effects using Web Audio API
+        this.sounds = {
+            cardPlay: () => this.playTone(523.25, 0.1, 'sine'), // C5
+            cardDraw: () => this.playTone(392.00, 0.15, 'triangle'), // G4
+            buttonClick: () => this.playTone(659.25, 0.08, 'square'), // E5
+            notification: () => this.playChord([523.25, 659.25, 783.99], 0.3), // C-E-G
+            error: () => this.playTone(220.00, 0.4, 'sawtooth'), // A3
+            win: () => this.playMelody([523.25, 587.33, 659.25, 698.46, 783.99], 0.2),
+            uno: () => this.playChord([440.00, 554.37, 659.25], 0.5)
+        };
+    }
+
+    playTone(frequency, duration, type = 'sine') {
+        if (!this.audioEnabled || !this.audioContext) return;
+        
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+        
+        oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+        oscillator.type = type;
+        
+        gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+        gainNode.gain.linearRampToValueAtTime(this.sfxVolume * 0.3, this.audioContext.currentTime + 0.01);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + duration);
+        
+        oscillator.start(this.audioContext.currentTime);
+        oscillator.stop(this.audioContext.currentTime + duration);
+    }
+
+    playChord(frequencies, duration) {
+        frequencies.forEach((freq, index) => {
+            setTimeout(() => this.playTone(freq, duration * 0.8, 'sine'), index * 50);
+        });
+    }
+
+    playMelody(frequencies, noteDuration) {
+        frequencies.forEach((freq, index) => {
+            setTimeout(() => this.playTone(freq, noteDuration, 'triangle'), index * noteDuration * 1000);
+        });
+    }
+
+    createFloatingElements() {
+        // Create floating Hello Kitty elements
+        const elements = ['🎀', '💖', '🌸', '✨', '🎈', '🦄', '🌟', '💕'];
+        
+        setInterval(() => {
+            if (Math.random() < 0.3) { // 30% chance every interval
+                const element = document.createElement('div');
+                element.className = 'floating-kitty';
+                element.textContent = elements[Math.floor(Math.random() * elements.length)];
+                element.style.left = Math.random() * 100 + 'vw';
+                element.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                element.style.fontSize = (Math.random() * 1.5 + 1) + 'rem';
+                document.body.appendChild(element);
+                
+                // Remove element after animation
+                setTimeout(() => {
+                    if (element.parentNode) {
+                        element.parentNode.removeChild(element);
+                    }
+                }, 25000);
+            }
+        }, 3000);
+    }
+
+    createAudioControls() {
+        const audioControls = document.createElement('div');
+        audioControls.className = 'audio-controls';
+        audioControls.innerHTML = `
+            <div class="volume-control">
+                <label>🎵</label>
+                <input type="range" id="musicVolume" min="0" max="1" step="0.1" value="${this.musicVolume}">
+                <button class="mute-btn" id="musicMute">🔊</button>
+            </div>
+            <div class="volume-control">
+                <label>🔊</label>
+                <input type="range" id="sfxVolume" min="0" max="1" step="0.1" value="${this.sfxVolume}">
+                <button class="mute-btn" id="sfxMute">🔊</button>
+            </div>
+        `;
+        
+        document.body.appendChild(audioControls);
+        
+        // Bind audio control events
+        document.getElementById('musicVolume').addEventListener('input', (e) => {
+            this.musicVolume = parseFloat(e.target.value);
+            if (this.backgroundMusic) {
+                this.backgroundMusic.volume = this.musicVolume;
+            }
+        });
+        
+        document.getElementById('sfxVolume').addEventListener('input', (e) => {
+            this.sfxVolume = parseFloat(e.target.value);
+        });
+        
+        document.getElementById('musicMute').addEventListener('click', (e) => {
+            this.musicVolume = this.musicVolume > 0 ? 0 : 0.3;
+            document.getElementById('musicVolume').value = this.musicVolume;
+            if (this.backgroundMusic) {
+                this.backgroundMusic.volume = this.musicVolume;
+            }
+            e.target.textContent = this.musicVolume > 0 ? '🔊' : '🔇';
+        });
+        
+        document.getElementById('sfxMute').addEventListener('click', (e) => {
+            this.sfxVolume = this.sfxVolume > 0 ? 0 : 0.5;
+            document.getElementById('sfxVolume').value = this.sfxVolume;
+            e.target.textContent = this.sfxVolume > 0 ? '🔊' : '🔇';
+        });
+    }
+
+    createClickEffect(x, y) {
+        const effects = ['💖', '✨', '🌸', '💕'];
+        const effect = document.createElement('div');
+        effect.textContent = effects[Math.floor(Math.random() * effects.length)];
+        effect.style.cssText = `
+            position: fixed;
+            left: ${x}px;
+            top: ${y}px;
+            pointer-events: none;
+            z-index: 9999;
+            font-size: 1.2rem;
+            animation: clickEffect 0.8s ease-out forwards;
+        `;
+        
+        // Add click effect animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes clickEffect {
+                0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+                100% { transform: translate(-50%, -50%) scale(1.5) translateY(-30px); opacity: 0; }
+            }
+        `;
+        if (!document.querySelector('style[data-click-effect]')) {
+            style.setAttribute('data-click-effect', 'true');
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(effect);
+        setTimeout(() => effect.remove(), 800);
+    }
+
+    createSparkleEffect(element) {
+        for (let i = 0; i < 5; i++) {
+            setTimeout(() => {
+                const sparkle = document.createElement('div');
+                sparkle.className = 'sparkle';
+                sparkle.style.left = Math.random() * element.offsetWidth + 'px';
+                sparkle.style.top = Math.random() * element.offsetHeight + 'px';
+                element.appendChild(sparkle);
+                
+                setTimeout(() => sparkle.remove(), 2000);
+            }, i * 100);
+        }
     }
 
     connectSocket() {
@@ -307,6 +499,9 @@ class UnoClient {
             screen.classList.remove('active');
         });
         screenElement.classList.add('active');
+        
+        // Add screen transition effects
+        screenElement.style.animation = 'fadeInScale 0.5s ease-out';
     }
 
     showMainMenu() {
@@ -320,11 +515,38 @@ class UnoClient {
 
     showGameScreen() {
         this.showScreen(this.gameScreen);
+        // Start background music when game starts
+        this.startBackgroundMusic();
+    }
+
+    startBackgroundMusic() {
+        // Create a simple kawaii melody using Web Audio API
+        if (this.audioEnabled && this.musicVolume > 0) {
+            this.playBackgroundLoop();
+        }
+    }
+
+    playBackgroundLoop() {
+        if (!this.audioEnabled || this.musicVolume === 0) return;
+        
+        const melody = [523.25, 587.33, 659.25, 698.46, 783.99, 698.46, 659.25, 587.33];
+        let noteIndex = 0;
+        
+        const playNextNote = () => {
+            if (this.audioEnabled && this.musicVolume > 0) {
+                this.playTone(melody[noteIndex], 0.5, 'sine');
+                noteIndex = (noteIndex + 1) % melody.length;
+                setTimeout(playNextNote, 1000);
+            }
+        };
+        
+        playNextNote();
     }
 
     // Modal management
     showJoinModal() {
         if (!this.validatePlayerName()) return;
+        this.sounds.buttonClick();
         this.joinRoomModal.classList.add('active');
     }
 
@@ -335,6 +557,7 @@ class UnoClient {
 
     showColorPicker() {
         this.colorPickerModal.classList.add('active');
+        this.sounds.notification();
     }
 
     hideColorPicker() {
@@ -343,6 +566,7 @@ class UnoClient {
 
     showGameOver(winnerName) {
         console.log('Showing game over modal for winner:', winnerName);
+        this.sounds.win();
         this.winnerName.textContent = winnerName;
         
         // Reset the play again button state
@@ -371,6 +595,7 @@ class UnoClient {
     showError(message) {
         this.errorText.textContent = message;
         this.errorMessage.classList.add('show');
+        this.sounds.error();
         setTimeout(() => this.hideError(), 5000);
     }
 
@@ -383,19 +608,9 @@ class UnoClient {
         const notification = document.createElement('div');
         notification.className = 'notification';
         notification.textContent = message;
-        notification.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 15px 25px;
-            border-radius: 10px;
-            z-index: 3000;
-            font-weight: 500;
-        `;
         document.body.appendChild(notification);
+        
+        this.sounds.notification();
         
         setTimeout(() => {
             notification.remove();
@@ -407,9 +622,11 @@ class UnoClient {
         const name = this.playerNameInput.value.trim();
         if (!name) {
             this.showError('Please enter your name');
+            this.sounds.error();
             return false;
         }
         this.playerName = name;
+        this.sounds.buttonClick();
         return true;
     }
 
@@ -417,6 +634,7 @@ class UnoClient {
         if (!this.validatePlayerName()) return;
         
         console.log('Creating room for player:', this.playerName);
+        this.sounds.buttonClick();
         this.showLoading();
         this.socket.emit('createRoom', this.playerName);
     }
@@ -427,10 +645,12 @@ class UnoClient {
         const roomCode = this.roomCodeInput.value.trim();
         if (!roomCode) {
             this.showError('Please enter a room code');
+            this.sounds.error();
             return;
         }
         
         console.log('Attempting to join room:', roomCode);
+        this.sounds.buttonClick();
         this.showLoading();
         this.socket.emit('joinRoom', { roomId: roomCode, playerName: this.playerName });
         this.hideJoinModal();
@@ -439,28 +659,34 @@ class UnoClient {
     startGame() {
         if (this.gameState.players.length < 2) {
             this.showError('Need at least 2 players to start');
+            this.sounds.error();
             return;
         }
         
+        this.sounds.notification();
         this.socket.emit('startGame');
     }
 
     playCard(card) {
         if (!this.isMyTurn()) {
             this.showError("It's not your turn!");
+            this.sounds.error();
             return;
         }
 
         if (card.color === 'wild') {
             this.selectedCard = card;
+            this.sounds.cardPlay();
             this.showColorPicker();
         } else {
+            this.sounds.cardPlay();
             this.socket.emit('playCard', { card });
         }
     }
 
     selectColor(color) {
         if (this.selectedCard) {
+            this.sounds.cardPlay();
             this.socket.emit('playCard', { 
                 card: this.selectedCard, 
                 chosenColor: color 
@@ -473,14 +699,17 @@ class UnoClient {
     drawCard() {
         if (!this.isMyTurn()) {
             this.showError("It's not your turn!");
+            this.sounds.error();
             return;
         }
         
+        this.sounds.cardDraw();
         this.socket.emit('drawCard');
     }
 
     callUno() {
         // UNO call logic can be implemented here
+        this.sounds.uno();
         this.showNotification('UNO!');
     }
 
@@ -508,6 +737,7 @@ class UnoClient {
         const currentPlayer = this.gameState.players.find(p => p.id === this.socket.id);
         if (currentPlayer) {
             const newReadyStatus = !currentPlayer.ready;
+            this.sounds.buttonClick();
             this.setReady(newReadyStatus);
             
             // Update button text immediately for better UX
@@ -794,6 +1024,10 @@ class UnoClient {
         
         this.playerHand.forEach(card => {
             const cardElement = this.createCardElement(card, true);
+            // Add hover effect with sparkles
+            cardElement.addEventListener('mouseenter', () => {
+                this.createSparkleEffect(cardElement);
+            });
             this.cardsContainer.appendChild(cardElement);
         });
         
@@ -832,6 +1066,9 @@ class UnoClient {
         const cardDiv = document.createElement('div');
         cardDiv.className = `card ${card.color}`;
         
+        // Add kawaii card content
+        this.addKawaiiCardContent(cardDiv, card);
+        
         // Check if card is playable
         if (clickable && !this.canPlayCard(card)) {
             cardDiv.style.opacity = '0.5';
@@ -849,18 +1086,21 @@ class UnoClient {
                 // Check if it's the player's turn
                 if (!this.isMyTurn()) {
                     this.showError("It's not your turn!");
+                    this.sounds.error();
                     return;
                 }
                 
                 // Check if player is skipped
                 if (this.isSkipped()) {
                     this.showError("You were skipped! Wait for your next turn.");
+                    this.sounds.error();
                     return;
                 }
                 
                 // Check if card is playable
                 if (!this.canPlayCard(card)) {
                     this.showError("You can't play this card right now!");
+                    this.sounds.error();
                     return;
                 }
                 
@@ -872,36 +1112,70 @@ class UnoClient {
                 // Select this card and play it
                 cardDiv.classList.add('selected');
                 setTimeout(() => {
+                    this.sounds.cardPlay();
                     this.playCard(card);
                     cardDiv.classList.remove('selected');
                 }, 200);
             });
         }
         
-        // Set card content
+        return cardDiv;
+    }
+
+    addKawaiiCardContent(cardDiv, card) {
+        // Create kawaii card designs
         if (card.type === 'number') {
-            cardDiv.textContent = card.value;
+            cardDiv.innerHTML = `
+                <div style="position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                    <div style="font-size: 1.2rem; font-weight: 800;">${card.value}</div>
+                    <div style="position: absolute; top: 5px; left: 5px; font-size: 0.6rem;">🎀</div>
+                    <div style="position: absolute; bottom: 5px; right: 5px; font-size: 0.6rem;">💖</div>
+                </div>
+            `;
         } else if (card.type === 'action') {
+            let symbol, emoji;
             switch (card.value) {
                 case 'skip':
-                    cardDiv.innerHTML = '⊘';
+                    symbol = '⊘';
+                    emoji = '🚫';
                     break;
                 case 'reverse':
-                    cardDiv.innerHTML = '⟲';
+                    symbol = '⟲';
+                    emoji = '🔄';
                     break;
                 case 'draw2':
-                    cardDiv.innerHTML = '+2';
+                    symbol = '+2';
+                    emoji = '📚';
                     break;
             }
+            cardDiv.innerHTML = `
+                <div style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                    <div style="font-size: 1rem;">${symbol}</div>
+                    <div style="font-size: 0.8rem; margin-top: 2px;">${emoji}</div>
+                    <div style="position: absolute; top: 3px; right: 3px; font-size: 0.5rem;">✨</div>
+                </div>
+            `;
         } else if (card.type === 'wild') {
             if (card.value === 'wild') {
-                cardDiv.innerHTML = '🌈';
+                cardDiv.innerHTML = `
+                    <div style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <div style="font-size: 1rem;">🌈</div>
+                        <div style="font-size: 0.7rem; font-weight: 800;">WILD</div>
+                        <div style="position: absolute; top: 3px; left: 3px; font-size: 0.5rem;">🦄</div>
+                        <div style="position: absolute; bottom: 3px; right: 3px; font-size: 0.5rem;">⭐</div>
+                    </div>
+                `;
             } else if (card.value === 'draw4') {
-                cardDiv.innerHTML = '+4';
+                cardDiv.innerHTML = `
+                    <div style="position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <div style="font-size: 0.9rem; font-weight: 800;">+4</div>
+                        <div style="font-size: 0.8rem;">🌟</div>
+                        <div style="position: absolute; top: 3px; left: 3px; font-size: 0.5rem;">💫</div>
+                        <div style="position: absolute; bottom: 3px; right: 3px; font-size: 0.5rem;">✨</div>
+                    </div>
+                `;
             }
         }
-        
-        return cardDiv;
     }
 
     getCardName(card) {
@@ -917,12 +1191,14 @@ class UnoClient {
 
     votePlayAgain() {
         console.log('Voting to play again');
+        this.sounds.buttonClick();
         this.socket.emit('playAgain');
         // Don't change button state immediately - wait for server confirmation
     }
 
     leaveGame() {
         console.log('Leaving game');
+        this.sounds.buttonClick();
         this.socket.disconnect();
         this.resetToMainMenu();
     }
@@ -950,6 +1226,7 @@ class UnoClient {
 
     startNewGame() {
         console.log('Starting new game');
+        this.sounds.notification();
         this.socket.emit('startNewGame');
         this.hideGameOver();
         this.showLoading();
@@ -964,6 +1241,10 @@ class UnoClient {
         this.playerHand = [];
         this.selectedCard = null;
         this.roomId = '';
+        
+        // Stop background music
+        this.audioEnabled = false;
+        setTimeout(() => { this.audioEnabled = true; }, 1000);
         
         // Reconnect to allow creating/joining new games
         this.socket.disconnect();
