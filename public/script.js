@@ -257,6 +257,13 @@ class UnoClient {
             this.updateVoteDisplay(data.votes, data.totalPlayers);
             this.showNotification(`${data.votes}/${data.totalPlayers} players want to play again!`);
             
+            // Update button state if this player voted
+            if (data.votedPlayers.includes(this.socket.id)) {
+                this.playAgainBtn.disabled = true;
+                this.playAgainBtn.textContent = 'Voted!';
+                this.playAgainBtn.className = 'btn btn-success';
+            }
+            
             // If all players have voted, show automatic transition message
             if (data.allVoted) {
                 this.showNotification('All players voted! Starting new game in 2 seconds...');
@@ -337,6 +344,14 @@ class UnoClient {
     showGameOver(winnerName) {
         console.log('Showing game over modal for winner:', winnerName);
         this.winnerName.textContent = winnerName;
+        
+        // Reset the play again button state
+        if (this.playAgainBtn) {
+            this.playAgainBtn.disabled = false;
+            this.playAgainBtn.textContent = 'Yes, Play Again!';
+            this.playAgainBtn.className = 'btn btn-primary';
+        }
+        
         this.gameOverModal.classList.add('active');
         console.log('Game over modal should now be visible');
     }
@@ -903,9 +918,7 @@ class UnoClient {
     votePlayAgain() {
         console.log('Voting to play again');
         this.socket.emit('playAgain');
-        this.playAgainBtn.disabled = true;
-        this.playAgainBtn.textContent = 'Voted!';
-        this.playAgainBtn.className = 'btn btn-success';
+        // Don't change button state immediately - wait for server confirmation
     }
 
     leaveGame() {
