@@ -618,12 +618,12 @@ class UnoClient {
         this.roomCodeDisplay.title = 'Click to copy room code';
     }
 
-    copyRoomCode() {
+        copyRoomCode() {
         if (navigator.clipboard) {
             navigator.clipboard.writeText(this.roomId).then(() => {
                 this.showNotification('Room code copied! 📋');
                 this.sounds.notification();
-                
+
                 // Visual feedback
                 this.roomCodeDisplay.style.transform = 'scale(1.1)';
                 setTimeout(() => {
@@ -634,20 +634,41 @@ class UnoClient {
                 this.showNotification('Failed to copy room code');
             });
         } else {
-            // Fallback for older browsers
-            const textArea = document.createElement('textarea');
-            textArea.value = this.roomId;
-            document.body.appendChild(textArea);
-            textArea.select();
-            try {
-                document.execCommand('copy');
-                this.showNotification('Room code copied! 📋');
-                this.sounds.notification();
-            } catch (err) {
-                console.error('Fallback copy failed:', err);
-                this.showNotification('Failed to copy room code');
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = this.roomId;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    this.showNotification('Room code copied! 📋');
+                    this.sounds.notification();
+                } catch (err) {
+                    console.error('Fallback copy failed:', err);
+                    this.showNotification('Failed to copy room code');
+                }
+                document.body.removeChild(textArea);
             }
-            document.body.removeChild(textArea);
+        }
+
+    pasteRoomCode() {
+        if (navigator.clipboard && navigator.clipboard.readText) {
+            navigator.clipboard.readText().then(text => {
+                // Clean the text (remove spaces, make uppercase)
+                const cleanCode = text.replace(/\s/g, '').toUpperCase();
+                if (cleanCode.length === 6 && /^[A-Z0-9]{6}$/.test(cleanCode)) {
+                    this.roomCodeInput.value = cleanCode;
+                    this.showNotification('Room code pasted! 📋');
+                    this.sounds.notification();
+                } else {
+                    this.showNotification('Invalid room code format');
+                }
+            }).catch(err => {
+                console.error('Failed to paste room code:', err);
+                this.showNotification('Failed to paste room code');
+            });
+        } else {
+            this.showNotification('Paste not supported in this browser');
         }
     }
 
@@ -1041,20 +1062,22 @@ class UnoClient {
         if (currentPlayer) {
             let playerText = currentPlayer.name;
             
+            // Check if it's the current player's turn
+            const isMyTurn = currentPlayer.id === this.socket.id;
+            
+            if (isMyTurn) {
+                playerText = 'You';
+                this.gameInfo.classList.add('your-turn');
+            } else {
+                this.gameInfo.classList.remove('your-turn');
+            }
+            
             // Add draw penalty info
             if (this.gameState.drawCount > 0) {
                 playerText += ` (Draw ${this.gameState.drawCount})`;
             }
             
             this.currentPlayerName.textContent = playerText;
-            
-            if (currentPlayer.id === this.socket.id) {
-                this.currentPlayerInfo.style.background = '#28a745';
-                this.currentPlayerInfo.style.color = 'white';
-            } else {
-                this.currentPlayerInfo.style.background = 'rgba(255, 255, 255, 0.9)';
-                this.currentPlayerInfo.style.color = '#333';
-            }
         }
     }
 
@@ -1128,14 +1151,12 @@ class UnoClient {
         
         // Check if card is playable
         if (clickable && !this.canPlayCard(card)) {
-            cardDiv.style.opacity = '0.5';
-            cardDiv.style.cursor = 'not-allowed';
+            cardDiv.classList.add('unplayable');
         }
         
         // Add special styling for skipped players
         if (clickable && this.isSkipped()) {
-            cardDiv.style.filter = 'grayscale(100%)';
-            cardDiv.style.opacity = '0.3';
+            cardDiv.classList.add('unplayable');
         }
         
         if (clickable) {
@@ -1374,8 +1395,15 @@ class UnoClient {
     }
 }
 
+// Global function for paste room code button
+function pasteRoomCode() {
+    if (window.unoClient) {
+        window.unoClient.pasteRoomCode();
+    }
+}
+
 // Initialize the game when the page loads
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM loaded, creating UNO Client...');
-    new UnoClient();
+    window.unoClient = new UnoClient();
 });
