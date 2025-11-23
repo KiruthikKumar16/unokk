@@ -1188,6 +1188,58 @@ body {
     backdrop-filter: blur(10px);
 }
 
+/* Direct Join Screen Styling */
+.direct-join-card {
+    animation: slideInFromTop 0.5s ease-out;
+}
+
+@keyframes slideInFromTop {
+    0% {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.95);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.direct-join-info {
+    text-align: center;
+    margin-bottom: clamp(20px, 3vh, 30px);
+    padding: clamp(15px, 2.5vh, 20px);
+    background: linear-gradient(135deg, rgba(255, 182, 193, 0.2) 0%, rgba(255, 192, 203, 0.2) 100%);
+    border-radius: clamp(12px, 2vw, 18px);
+    border: 2px solid rgba(255, 182, 193, 0.4);
+}
+
+.direct-join-info p {
+    font-size: clamp(16px, 2.2vw, 20px);
+    font-weight: 700;
+    color: #FF69B4;
+    margin: 0;
+}
+
+.room-code-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(8px, 1.5vw, 12px);
+}
+
+.room-code-display span {
+    background: linear-gradient(135deg, #FF69B4 0%, #FF1493 100%);
+    color: white;
+    padding: clamp(8px, 1.5vh, 12px) clamp(16px, 3vw, 24px);
+    border-radius: clamp(12px, 2vw, 18px);
+    font-weight: 800;
+    font-size: clamp(18px, 2.5vw, 24px);
+    letter-spacing: 2px;
+    box-shadow: 0 5px 15px rgba(255, 105, 180, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
 .menu-card::before {
     content: '';
     position: absolute;

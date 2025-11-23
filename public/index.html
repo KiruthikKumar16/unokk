@@ -10,6 +10,29 @@
 </head>
 <body>
     <div id="app">
+        <!-- Direct Join Screen (for shared links) -->
+        <div id="directJoinScreen" class="screen">
+            <div class="container">
+                <h1 class="title">Hello Kitty UNO</h1>
+                <p class="subtitle">Join Your Friend's Kawaii Game! 🎀</p>
+                
+                <div class="menu-card direct-join-card">
+                    <div class="direct-join-info">
+                        <p class="room-code-display">Room: <span id="directJoinRoomCode"></span></p>
+                    </div>
+                    
+                    <div class="input-group">
+                        <input type="text" id="directJoinPlayerName" placeholder="Enter your cute name 🎀" maxlength="20">
+                    </div>
+                    
+                    <div class="button-group">
+                        <button id="directJoinBtn" class="btn btn-primary">💖 Join Game</button>
+                        <button id="backToMainBtn" class="btn btn-secondary">← Back to Main</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Main Menu -->
         <div id="mainMenu" class="screen active">
             <div class="container">

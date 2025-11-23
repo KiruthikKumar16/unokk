@@ -7,6 +7,7 @@ class UnoClient {
         this.selectedCard = null;
         this.playerName = '';
         this.roomId = '';
+        this.pendingRoomCode = null; // For direct join from URL
         
         // Audio system
         this.audioEnabled = true;
@@ -33,6 +34,7 @@ class UnoClient {
     initializeElements() {
         // Screens
         this.mainMenu = document.getElementById('mainMenu');
+        this.directJoinScreen = document.getElementById('directJoinScreen');
         this.lobby = document.getElementById('lobby');
         this.gameScreen = document.getElementById('gameScreen');
         
@@ -40,6 +42,12 @@ class UnoClient {
         this.playerNameInput = document.getElementById('playerName');
         this.createRoomBtn = document.getElementById('createRoomBtn');
         this.joinRoomBtn = document.getElementById('joinRoomBtn');
+        
+        // Direct join screen elements
+        this.directJoinPlayerNameInput = document.getElementById('directJoinPlayerName');
+        this.directJoinRoomCodeDisplay = document.getElementById('directJoinRoomCode');
+        this.directJoinBtn = document.getElementById('directJoinBtn');
+        this.backToMainBtn = document.getElementById('backToMainBtn');
         
         // Join room modal
         this.joinRoomModal = document.getElementById('joinRoomModal');
@@ -83,6 +91,13 @@ class UnoClient {
         // Main menu events
         this.createRoomBtn.addEventListener('click', () => this.createRoom());
         this.joinRoomBtn.addEventListener('click', () => this.showJoinModal());
+        
+        // Direct join screen events
+        this.directJoinBtn.addEventListener('click', () => this.directJoinRoom());
+        this.backToMainBtn.addEventListener('click', () => this.showMainMenu());
+        this.directJoinPlayerNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.directJoinRoom();
+        });
         
         // Join room modal events
         this.closeJoinModal.addEventListener('click', () => this.hideJoinModal());
@@ -519,6 +534,16 @@ class UnoClient {
     showMainMenu() {
         this.showScreen(this.mainMenu);
         this.disablePageRefreshWarning();
+        this.pendingRoomCode = null; // Clear pending room code
+    }
+
+    showDirectJoinScreen(roomCode) {
+        this.showScreen(this.directJoinScreen);
+        this.pendingRoomCode = roomCode;
+        this.directJoinRoomCodeDisplay.textContent = roomCode;
+        this.directJoinPlayerNameInput.value = '';
+        this.directJoinPlayerNameInput.focus();
+        this.disablePageRefreshWarning();
     }
 
     showLobby() {
@@ -693,20 +718,19 @@ class UnoClient {
             // Clean and validate the room code
             const cleanCode = roomCode.trim().toUpperCase();
             if (cleanCode.length === 6 && /^[A-Z0-9]{6}$/.test(cleanCode)) {
-                // Wait a bit for socket to connect, then auto-open join modal
+                // Store the room code and show direct join screen
+                this.pendingRoomCode = cleanCode;
+                
+                // Wait a bit for socket to connect, then show direct join screen
                 setTimeout(() => {
                     if (this.socket && this.socket.connected) {
-                        this.roomCodeInput.value = cleanCode;
-                        this.showJoinModal();
-                        this.showNotification('Room code detected! Enter your name to join 🎀');
+                        this.showDirectJoinScreen(cleanCode);
                     } else {
                         // If socket not connected yet, wait a bit more
                         const checkConnection = setInterval(() => {
                             if (this.socket && this.socket.connected) {
                                 clearInterval(checkConnection);
-                                this.roomCodeInput.value = cleanCode;
-                                this.showJoinModal();
-                                this.showNotification('Room code detected! Enter your name to join 🎀');
+                                this.showDirectJoinScreen(cleanCode);
                             }
                         }, 100);
                         
@@ -777,6 +801,33 @@ class UnoClient {
         this.sounds.buttonClick();
         this.showLoading();
         this.socket.emit('createRoom', this.playerName);
+    }
+
+    validateDirectJoinPlayerName() {
+        const name = this.directJoinPlayerNameInput.value.trim();
+        if (!name) {
+            this.showError('Please enter your name');
+            this.sounds.error();
+            return false;
+        }
+        this.playerName = name;
+        this.sounds.buttonClick();
+        return true;
+    }
+
+    directJoinRoom() {
+        if (!this.validateDirectJoinPlayerName()) return;
+        
+        if (!this.pendingRoomCode) {
+            this.showError('No room code found');
+            this.sounds.error();
+            return;
+        }
+        
+        console.log('Attempting to join room via direct link:', this.pendingRoomCode);
+        this.sounds.buttonClick();
+        this.showLoading();
+        this.socket.emit('joinRoom', { roomId: this.pendingRoomCode, playerName: this.playerName });
     }
 
     joinRoom() {
