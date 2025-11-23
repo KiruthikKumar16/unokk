@@ -748,47 +748,90 @@ class UnoClient {
     }
 
     extractRoomCodeFromText(text) {
-        // Method 1: Look for "Room Code: XXXX" pattern
-        const roomCodePattern1 = /Room\s*Code:\s*([A-Z0-9]{6})/i;
-        let match = text.match(roomCodePattern1);
-        if (match && match[1]) {
-            return match[1].toUpperCase();
+        if (!text || typeof text !== 'string') {
+            return null;
         }
         
-        // Method 2: Look for URL parameter ?room=XXXX
+        // Normalize text - remove extra whitespace and convert to uppercase for matching
+        const normalizedText = text.trim();
+        
+        // Method 1: Look for "Room Code: XXXX" pattern (most reliable)
+        // Handle various formats: "Room Code:", "Room Code :", "RoomCode:", etc.
+        const roomCodePattern1 = /Room\s*Code\s*:?\s*([A-Z0-9]{6})/i;
+        let match = normalizedText.match(roomCodePattern1);
+        if (match && match[1]) {
+            const code = match[1].toUpperCase();
+            if (/^[A-Z0-9]{6}$/.test(code)) {
+                console.log('Extracted code via Method 1 (Room Code: pattern):', code);
+                return code;
+            }
+        }
+        
+        // Method 2: Look for URL parameter ?room=XXXX or &room=XXXX
         const urlPattern = /[?&]room=([A-Z0-9]{6})/i;
-        match = text.match(urlPattern);
+        match = normalizedText.match(urlPattern);
         if (match && match[1]) {
-            return match[1].toUpperCase();
+            const code = match[1].toUpperCase();
+            if (/^[A-Z0-9]{6}$/.test(code)) {
+                console.log('Extracted code via Method 2 (URL parameter):', code);
+                return code;
+            }
         }
         
-        // Method 3: Look for any 6-character alphanumeric code (standalone or in text)
-        // First, try to find codes that look like room codes (alphanumeric, 6 chars)
+        // Method 3: Look for any 6-character alphanumeric code (standalone)
+        // Use word boundaries to find isolated codes
         const codePattern = /\b([A-Z0-9]{6})\b/gi;
-        const codes = text.match(codePattern);
+        const codes = normalizedText.match(codePattern);
         if (codes && codes.length > 0) {
-            // Filter to find the most likely room code
-            // Prefer codes that are all uppercase alphanumeric
+            // Filter to find valid room codes
             for (let code of codes) {
                 const upperCode = code.toUpperCase();
                 if (/^[A-Z0-9]{6}$/.test(upperCode)) {
+                    console.log('Extracted code via Method 3 (word boundary):', upperCode);
                     return upperCode;
                 }
             }
         }
         
-        // Method 4: Try to extract from cleaned text (remove all non-alphanumeric)
-        const cleaned = text.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+        // Method 4: Look for codes after "Code:" or "code:" without "Room" prefix
+        const simpleCodePattern = /Code\s*:?\s*([A-Z0-9]{6})/i;
+        match = normalizedText.match(simpleCodePattern);
+        if (match && match[1]) {
+            const code = match[1].toUpperCase();
+            if (/^[A-Z0-9]{6}$/.test(code)) {
+                console.log('Extracted code via Method 4 (Code: pattern):', code);
+                return code;
+            }
+        }
+        
+        // Method 5: Try to extract from cleaned text (remove all non-alphanumeric)
+        // This is a last resort - might extract wrong code if multiple 6-char sequences exist
+        const cleaned = normalizedText.replace(/[^A-Z0-9]/gi, '').toUpperCase();
         if (cleaned.length >= 6) {
-            // Look for 6-character sequences
+            // Look for 6-character sequences, prefer ones that look like room codes
             for (let i = 0; i <= cleaned.length - 6; i++) {
                 const candidate = cleaned.substring(i, i + 6);
                 if (/^[A-Z0-9]{6}$/.test(candidate)) {
+                    // Prefer codes that have both letters and numbers (typical room codes)
+                    const hasLetters = /[A-Z]/.test(candidate);
+                    const hasNumbers = /[0-9]/.test(candidate);
+                    if (hasLetters && hasNumbers) {
+                        console.log('Extracted code via Method 5 (cleaned text with letters+numbers):', candidate);
+                        return candidate;
+                    }
+                }
+            }
+            // If no code with both letters and numbers, return first valid 6-char code
+            for (let i = 0; i <= cleaned.length - 6; i++) {
+                const candidate = cleaned.substring(i, i + 6);
+                if (/^[A-Z0-9]{6}$/.test(candidate)) {
+                    console.log('Extracted code via Method 5 (cleaned text):', candidate);
                     return candidate;
                 }
             }
         }
         
+        console.log('Could not extract room code from text:', normalizedText);
         return null;
     }
 
@@ -796,6 +839,14 @@ class UnoClient {
         if (navigator.clipboard && navigator.clipboard.readText) {
             navigator.clipboard.readText().then(text => {
                 console.log('Pasted text:', text);
+                console.log('Text length:', text.length);
+                console.log('Text type:', typeof text);
+                
+                if (!text || text.trim().length === 0) {
+                    this.showNotification('Clipboard is empty. Please copy the message first.');
+                    this.sounds.error();
+                    return;
+                }
                 
                 // Try to extract room code from the pasted text
                 let roomCode = this.extractRoomCodeFromText(text);
@@ -803,36 +854,57 @@ class UnoClient {
                 if (!roomCode) {
                     // Fallback: try simple extraction (remove spaces, check if it's a 6-char code)
                     const cleaned = text.replace(/\s/g, '').toUpperCase();
+                    console.log('Cleaned text (fallback):', cleaned);
                     if (cleaned.length === 6 && /^[A-Z0-9]{6}$/.test(cleaned)) {
                         roomCode = cleaned;
+                        console.log('Extracted code via fallback:', roomCode);
+                    }
+                }
+                
+                // Validate the extracted code
+                if (roomCode) {
+                    roomCode = roomCode.toUpperCase().trim();
+                    if (!/^[A-Z0-9]{6}$/.test(roomCode)) {
+                        console.error('Invalid room code format:', roomCode);
+                        this.showNotification(`Invalid room code format: "${roomCode}". Room code must be exactly 6 alphanumeric characters.`);
+                        this.sounds.error();
+                        return;
                     }
                 }
                 
                 if (roomCode && /^[A-Z0-9]{6}$/.test(roomCode)) {
+                    console.log('Successfully extracted room code:', roomCode);
+                    
                     // Check if we're on direct join screen or join modal
                     if (this.directJoinScreen && this.directJoinScreen.classList.contains('active')) {
                         // If on direct join screen, update the room code and show notification
                         this.pendingRoomCode = roomCode;
-                        this.directJoinRoomCodeDisplay.textContent = roomCode;
-                        this.showNotification('Room code extracted and updated! 📋✨');
+                        if (this.directJoinRoomCodeDisplay) {
+                            this.directJoinRoomCodeDisplay.textContent = roomCode;
+                        }
+                        this.showNotification(`Room code extracted: ${roomCode} 📋✨`);
                     } else if (this.roomCodeInput) {
                         // If on join modal, paste into input
                         this.roomCodeInput.value = roomCode;
-                        this.showNotification('Room code pasted! 📋✨');
+                        this.showNotification(`Room code pasted: ${roomCode} 📋✨`);
                     } else {
                         // If on main menu, show join modal with code
-                        this.roomCodeInput.value = roomCode;
+                        if (this.roomCodeInput) {
+                            this.roomCodeInput.value = roomCode;
+                        }
                         this.showJoinModal();
-                        this.showNotification('Room code pasted! Opening join screen... 📋✨');
+                        this.showNotification(`Room code pasted: ${roomCode}. Opening join screen... 📋✨`);
                     }
                     this.sounds.notification();
                 } else {
-                    this.showNotification('Could not find a valid room code in the pasted text. Please check the format.');
+                    console.error('Could not extract valid room code from:', text);
+                    this.showNotification('Could not find a valid room code in the pasted text. Please make sure you copied the full message with "Room Code: XXXX" or the link.');
                     this.sounds.error();
                 }
             }).catch(err => {
                 console.error('Failed to paste room code:', err);
-                this.showNotification('Failed to paste room code');
+                this.showNotification('Failed to access clipboard. Please make sure you have copied the message.');
+                this.sounds.error();
             });
         } else {
             // Fallback for older browsers
