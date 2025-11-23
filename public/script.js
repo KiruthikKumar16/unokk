@@ -1500,30 +1500,42 @@ class UnoClient {
     updateCenterAnimations() {
         if (!this.centerAnimations) return;
         
-        // Create floating sparkles
+        // Create floating sparkles continuously
         this.createFloatingSparkles();
+        
+        // Create sparkles periodically
+        if (!this.sparkleInterval) {
+            this.sparkleInterval = setInterval(() => {
+                this.createFloatingSparkles();
+            }, 2000);
+        }
     }
     
     createFloatingSparkles() {
+        if (!this.centerAnimations) return;
+        
         // Limit sparkles to avoid performance issues
         const existingSparkles = this.centerAnimations.querySelectorAll('.sparkle');
-        if (existingSparkles.length > 15) return;
+        if (existingSparkles.length > 20) return;
         
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 5; i++) {
             setTimeout(() => {
                 const sparkle = document.createElement('div');
                 sparkle.className = 'sparkle';
+                const size = Math.random() * 8 + 6;
+                const duration = Math.random() * 4 + 3;
                 sparkle.style.cssText = `
                     position: absolute;
-                    width: ${Math.random() * 6 + 4}px;
-                    height: ${Math.random() * 6 + 4}px;
-                    background: radial-gradient(circle, #FFD700 0%, transparent 70%);
+                    width: ${size}px;
+                    height: ${size}px;
+                    background: radial-gradient(circle, #FFD700 0%, #FF69B4 50%, transparent 100%);
                     border-radius: 50%;
                     left: ${Math.random() * 100}%;
                     top: ${Math.random() * 100}%;
                     pointer-events: none;
-                    animation: sparkleFloat ${Math.random() * 3 + 2}s ease-in-out infinite;
-                    opacity: ${Math.random() * 0.5 + 0.3};
+                    animation: sparkleFloat ${duration}s ease-in-out forwards;
+                    opacity: ${Math.random() * 0.6 + 0.4};
+                    box-shadow: 0 0 10px #FFD700;
                 `;
                 this.centerAnimations.appendChild(sparkle);
                 
@@ -1532,8 +1544,8 @@ class UnoClient {
                     if (sparkle.parentNode) {
                         sparkle.remove();
                     }
-                }, 5000);
-            }, i * 200);
+                }, duration * 1000);
+            }, i * 150);
         }
     }
 
@@ -1782,17 +1794,17 @@ class UnoClient {
         
         // For wild cards, create a card with the chosen color
         let displayCard = this.gameState.topCard;
-        const isWildCard = this.gameState.topCard.color === 'wild' || 
-                          this.gameState.topCard.type === 'wild' || 
-                          this.gameState.topCard.type === 'draw4';
+        // Check if it's actually a wild card - must have type: 'wild'
+        const isWildCard = this.gameState.topCard.type === 'wild';
         
+        // Only show wild color display for ACTUAL wild cards that were played
         if (isWildCard && this.gameState.currentColor) {
             displayCard = {
                 ...this.gameState.topCard,
                 color: this.gameState.currentColor
             };
             
-            // Show wild color display prominently
+            // Show wild color display prominently ONLY for wild cards
             if (this.wildColorDisplay && this.wildColorCircle) {
                 this.wildColorDisplay.style.display = 'flex';
                 const colorValue = this.getColorValue(this.gameState.currentColor);
@@ -1805,7 +1817,7 @@ class UnoClient {
                 this.wildColorCircle.textContent = colorName;
             }
         } else {
-            // Hide wild color display for non-wild cards
+            // ALWAYS hide wild color display for non-wild cards
             if (this.wildColorDisplay) {
                 this.wildColorDisplay.style.display = 'none';
             }
