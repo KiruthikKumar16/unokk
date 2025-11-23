@@ -26,6 +26,7 @@ class UnoClient {
         this.createAudioControls();
         this.setupPageRefreshWarning();
         this.connectSocket();
+        this.checkUrlForRoomCode();
         console.log('UNO Client initialized');
     }
 
@@ -620,6 +621,21 @@ class UnoClient {
         this.errorMessage.classList.remove('show');
     }
 
+    getBaseUrl() {
+        // Get the base URL for sharing
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            return window.location.origin;
+        } else {
+            // Use the deployed server URL
+            return 'https://unokk.up.railway.app';
+        }
+    }
+
+    getShareableLink() {
+        const baseUrl = this.getBaseUrl();
+        return `${baseUrl}?room=${this.roomId}`;
+    }
+
     setupRoomCodeCopy() {
         // Remove existing click listener to avoid duplicates
         this.roomCodeDisplay.removeEventListener('click', this.copyRoomCode);
@@ -629,13 +645,16 @@ class UnoClient {
         
         // Add visual indication that it's clickable
         this.roomCodeDisplay.style.cursor = 'pointer';
-        this.roomCodeDisplay.title = 'Click to copy room code';
+        this.roomCodeDisplay.title = 'Click to copy room code and link';
     }
 
-        copyRoomCode() {
+    copyRoomCode() {
+        const shareableLink = this.getShareableLink();
+        const shareText = `🎀 Join my Hello Kitty UNO game! 🎀\n\nRoom Code: ${this.roomId}\nJoin here: ${shareableLink}`;
+        
         if (navigator.clipboard) {
-            navigator.clipboard.writeText(this.roomId).then(() => {
-                this.showNotification('Room code copied! 📋');
+            navigator.clipboard.writeText(shareText).then(() => {
+                this.showNotification('Room code and link copied! 📋✨');
                 this.sounds.notification();
 
                 // Visual feedback
@@ -648,22 +667,60 @@ class UnoClient {
                 this.showNotification('Failed to copy room code');
             });
         } else {
-                // Fallback for older browsers
-                const textArea = document.createElement('textarea');
-                textArea.value = this.roomId;
-                document.body.appendChild(textArea);
-                textArea.select();
-                try {
-                    document.execCommand('copy');
-                    this.showNotification('Room code copied! 📋');
-                    this.sounds.notification();
-                } catch (err) {
-                    console.error('Fallback copy failed:', err);
-                    this.showNotification('Failed to copy room code');
-                }
-                document.body.removeChild(textArea);
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = shareText;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                this.showNotification('Room code and link copied! 📋✨');
+                this.sounds.notification();
+            } catch (err) {
+                console.error('Fallback copy failed:', err);
+                this.showNotification('Failed to copy room code');
+            }
+            document.body.removeChild(textArea);
+        }
+    }
+
+    checkUrlForRoomCode() {
+        // Check if there's a room code in the URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomCode = urlParams.get('room');
+        
+        if (roomCode) {
+            // Clean and validate the room code
+            const cleanCode = roomCode.trim().toUpperCase();
+            if (cleanCode.length === 6 && /^[A-Z0-9]{6}$/.test(cleanCode)) {
+                // Wait a bit for socket to connect, then auto-open join modal
+                setTimeout(() => {
+                    if (this.socket && this.socket.connected) {
+                        this.roomCodeInput.value = cleanCode;
+                        this.showJoinModal();
+                        this.showNotification('Room code detected! Enter your name to join 🎀');
+                    } else {
+                        // If socket not connected yet, wait a bit more
+                        const checkConnection = setInterval(() => {
+                            if (this.socket && this.socket.connected) {
+                                clearInterval(checkConnection);
+                                this.roomCodeInput.value = cleanCode;
+                                this.showJoinModal();
+                                this.showNotification('Room code detected! Enter your name to join 🎀');
+                            }
+                        }, 100);
+                        
+                        // Stop checking after 5 seconds
+                        setTimeout(() => clearInterval(checkConnection), 5000);
+                    }
+                }, 500);
+                
+                // Clean the URL to remove the room parameter after processing
+                const newUrl = window.location.pathname;
+                window.history.replaceState({}, document.title, newUrl);
             }
         }
+    }
 
     pasteRoomCode() {
         if (navigator.clipboard && navigator.clipboard.readText) {
