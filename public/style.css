@@ -1213,6 +1213,13 @@ body {
     border: 2px solid rgba(255, 182, 193, 0.4);
 }
 
+.direct-join-info .paste-room-btn {
+    width: 100%;
+    max-width: 300px;
+    margin: clamp(10px, 1.5vh, 15px) auto 0;
+    font-size: clamp(12px, 1.6vw, 14px);
+}
+
 .direct-join-info p {
     font-size: clamp(16px, 2.2vw, 20px);
     font-weight: 700;

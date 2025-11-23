@@ -675,7 +675,8 @@ class UnoClient {
 
     copyRoomCode() {
         const shareableLink = this.getShareableLink();
-        const shareText = `🎀 Join my Hello Kitty UNO game! 🎀\n\nRoom Code: ${this.roomId}\nJoin here: ${shareableLink}`;
+        // Format optimized for easy extraction - room code is clearly labeled
+        const shareText = `🎀 Join my Hello Kitty UNO game! 🎀\n\nRoom Code: ${this.roomId}\n\nJoin here: ${shareableLink}\n\nOr paste this message and click "Paste Code" button!`;
         
         if (navigator.clipboard) {
             navigator.clipboard.writeText(shareText).then(() => {
@@ -746,24 +747,123 @@ class UnoClient {
         }
     }
 
+    extractRoomCodeFromText(text) {
+        // Method 1: Look for "Room Code: XXXX" pattern
+        const roomCodePattern1 = /Room\s*Code:\s*([A-Z0-9]{6})/i;
+        let match = text.match(roomCodePattern1);
+        if (match && match[1]) {
+            return match[1].toUpperCase();
+        }
+        
+        // Method 2: Look for URL parameter ?room=XXXX
+        const urlPattern = /[?&]room=([A-Z0-9]{6})/i;
+        match = text.match(urlPattern);
+        if (match && match[1]) {
+            return match[1].toUpperCase();
+        }
+        
+        // Method 3: Look for any 6-character alphanumeric code (standalone or in text)
+        // First, try to find codes that look like room codes (alphanumeric, 6 chars)
+        const codePattern = /\b([A-Z0-9]{6})\b/gi;
+        const codes = text.match(codePattern);
+        if (codes && codes.length > 0) {
+            // Filter to find the most likely room code
+            // Prefer codes that are all uppercase alphanumeric
+            for (let code of codes) {
+                const upperCode = code.toUpperCase();
+                if (/^[A-Z0-9]{6}$/.test(upperCode)) {
+                    return upperCode;
+                }
+            }
+        }
+        
+        // Method 4: Try to extract from cleaned text (remove all non-alphanumeric)
+        const cleaned = text.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+        if (cleaned.length >= 6) {
+            // Look for 6-character sequences
+            for (let i = 0; i <= cleaned.length - 6; i++) {
+                const candidate = cleaned.substring(i, i + 6);
+                if (/^[A-Z0-9]{6}$/.test(candidate)) {
+                    return candidate;
+                }
+            }
+        }
+        
+        return null;
+    }
+
     pasteRoomCode() {
         if (navigator.clipboard && navigator.clipboard.readText) {
             navigator.clipboard.readText().then(text => {
-                // Clean the text (remove spaces, make uppercase)
-                const cleanCode = text.replace(/\s/g, '').toUpperCase();
-                if (cleanCode.length === 6 && /^[A-Z0-9]{6}$/.test(cleanCode)) {
-                    this.roomCodeInput.value = cleanCode;
-                    this.showNotification('Room code pasted! 📋');
+                console.log('Pasted text:', text);
+                
+                // Try to extract room code from the pasted text
+                let roomCode = this.extractRoomCodeFromText(text);
+                
+                if (!roomCode) {
+                    // Fallback: try simple extraction (remove spaces, check if it's a 6-char code)
+                    const cleaned = text.replace(/\s/g, '').toUpperCase();
+                    if (cleaned.length === 6 && /^[A-Z0-9]{6}$/.test(cleaned)) {
+                        roomCode = cleaned;
+                    }
+                }
+                
+                if (roomCode && /^[A-Z0-9]{6}$/.test(roomCode)) {
+                    // Check if we're on direct join screen or join modal
+                    if (this.directJoinScreen && this.directJoinScreen.classList.contains('active')) {
+                        // If on direct join screen, update the room code and show notification
+                        this.pendingRoomCode = roomCode;
+                        this.directJoinRoomCodeDisplay.textContent = roomCode;
+                        this.showNotification('Room code extracted and updated! 📋✨');
+                    } else if (this.roomCodeInput) {
+                        // If on join modal, paste into input
+                        this.roomCodeInput.value = roomCode;
+                        this.showNotification('Room code pasted! 📋✨');
+                    } else {
+                        // If on main menu, show join modal with code
+                        this.roomCodeInput.value = roomCode;
+                        this.showJoinModal();
+                        this.showNotification('Room code pasted! Opening join screen... 📋✨');
+                    }
                     this.sounds.notification();
                 } else {
-                    this.showNotification('Invalid room code format');
+                    this.showNotification('Could not find a valid room code in the pasted text. Please check the format.');
+                    this.sounds.error();
                 }
             }).catch(err => {
                 console.error('Failed to paste room code:', err);
                 this.showNotification('Failed to paste room code');
             });
         } else {
-            this.showNotification('Paste not supported in this browser');
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.style.position = 'fixed';
+            textArea.style.opacity = '0';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            
+            try {
+                const pasted = document.execCommand('paste');
+                if (pasted) {
+                    const text = textArea.value;
+                    const roomCode = this.extractRoomCodeFromText(text);
+                    
+                    if (roomCode && /^[A-Z0-9]{6}$/.test(roomCode)) {
+                        if (this.roomCodeInput) {
+                            this.roomCodeInput.value = roomCode;
+                            this.showNotification('Room code pasted! 📋✨');
+                            this.sounds.notification();
+                        }
+                    } else {
+                        this.showNotification('Could not find a valid room code');
+                    }
+                }
+            } catch (err) {
+                console.error('Fallback paste failed:', err);
+                this.showNotification('Paste not supported in this browser');
+            }
+            
+            document.body.removeChild(textArea);
         }
     }
 
