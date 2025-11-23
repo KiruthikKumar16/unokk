@@ -67,11 +67,24 @@ class UnoClient {
         this.currentPlayerInfo = document.getElementById('currentPlayerInfo');
         this.currentPlayerName = document.getElementById('currentPlayerName');
         this.directionIndicator = document.getElementById('directionIndicator');
+        this.turnTimer = document.getElementById('turnTimer');
+        this.timerText = document.getElementById('timerText');
+        this.timerProgress = document.querySelector('.timer-progress');
         this.cardsContainer = document.getElementById('cardsContainer');
         this.drawCardBtn = document.getElementById('drawCardBtn');
         this.unoBtn = document.getElementById('unoBtn');
         this.leaveGameDuringPlayBtn = document.getElementById('leaveGameDuringPlayBtn');
         this.gameInfo = document.querySelector('.game-info');
+        
+        // Turn timer
+        this.turnTimerInterval = null;
+        this.turnTimeLeft = 30; // 30 seconds per turn
+        this.turnTimerDuration = 30;
+        
+        // Initialize timer display
+        if (this.turnTimer) {
+            this.turnTimer.style.display = 'none';
+        }
         
         // Modals
         this.colorPickerModal = document.getElementById('colorPickerModal');
@@ -469,6 +482,13 @@ class UnoClient {
         this.socket.on('playerLeft', (data) => {
             console.log('Player left:', data.playerName);
             this.showNotification(`${data.playerName} left the game 🚪`);
+        });
+
+        this.socket.on('heartReceived', (data) => {
+            console.log('Heart received from:', data.fromPlayer);
+            this.createHeartAnimation();
+            this.showNotification(`${data.fromPlayer} sent you 💖!`);
+            this.sounds.notification();
         });
 
         this.socket.on('gameEndedSinglePlayer', (data) => {
@@ -1056,19 +1076,88 @@ class UnoClient {
             return;
         }
 
+        // Stop timer when playing a card
+        this.stopTurnTimer();
+
         if (card.color === 'wild') {
             this.selectedCard = card;
             this.sounds.cardPlay();
             this.showColorPicker();
         } else {
             this.sounds.cardPlay();
+            // Animate card flying to discard pile
+            this.animateCardPlay(card);
             this.socket.emit('playCard', { card });
+        }
+    }
+
+    animateCardPlay(card) {
+        // Find the card element in hand
+        const cardElements = this.cardsContainer.querySelectorAll('.card');
+        let cardElement = null;
+        
+        cardElements.forEach(el => {
+            const cardData = el.getAttribute('data-card');
+            if (cardData) {
+                try {
+                    const parsedCard = JSON.parse(cardData);
+                    if (parsedCard.color === card.color && 
+                        parsedCard.type === card.type && 
+                        parsedCard.value === card.value) {
+                        cardElement = el;
+                    }
+                } catch (e) {
+                    // Ignore parse errors
+                }
+            }
+        });
+
+        if (cardElement && this.discardPile) {
+            // Clone card for animation
+            const animatedCard = cardElement.cloneNode(true);
+            animatedCard.style.position = 'fixed';
+            animatedCard.style.zIndex = '10000';
+            animatedCard.style.pointerEvents = 'none';
+            animatedCard.style.transition = 'all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+            
+            // Get positions
+            const cardRect = cardElement.getBoundingClientRect();
+            const discardRect = this.discardPile.getBoundingClientRect();
+            
+            // Set initial position
+            animatedCard.style.left = cardRect.left + 'px';
+            animatedCard.style.top = cardRect.top + 'px';
+            animatedCard.style.width = cardRect.width + 'px';
+            animatedCard.style.height = cardRect.height + 'px';
+            animatedCard.style.transform = 'rotate(0deg)';
+            
+            document.body.appendChild(animatedCard);
+            
+            // Animate to discard pile
+            requestAnimationFrame(() => {
+                animatedCard.style.left = discardRect.left + 'px';
+                animatedCard.style.top = discardRect.top + 'px';
+                animatedCard.style.width = discardRect.width + 'px';
+                animatedCard.style.height = discardRect.height + 'px';
+                animatedCard.style.transform = 'rotate(360deg) scale(1.1)';
+                animatedCard.style.opacity = '0.8';
+            });
+            
+            // Remove after animation
+            setTimeout(() => {
+                animatedCard.remove();
+            }, 600);
         }
     }
 
     selectColor(color) {
         if (this.selectedCard) {
+            // Stop timer when selecting color
+            this.stopTurnTimer();
+            
             this.sounds.cardPlay();
+            // Animate card flying to discard pile
+            this.animateCardPlay(this.selectedCard);
             this.socket.emit('playCard', { 
                 card: this.selectedCard, 
                 chosenColor: color 
@@ -1084,6 +1173,9 @@ class UnoClient {
             this.sounds.error();
             return;
         }
+        
+        // Stop timer when drawing a card
+        this.stopTurnTimer();
         
         this.sounds.cardDraw();
         this.socket.emit('drawCard');
@@ -1307,6 +1399,45 @@ class UnoClient {
         this.updatePlayerHand();
     }
 
+    sendHeartToPlayer(playerId, playerName) {
+        // Emit heart event to server
+        this.socket.emit('sendHeart', { targetPlayerId: playerId });
+        
+        // Show local animation
+        this.createHeartAnimation();
+        this.showNotification(`💖 Sent love to ${playerName}!`);
+        this.sounds.notification();
+    }
+
+    createHeartAnimation() {
+        // Create floating hearts animation
+        for (let i = 0; i < 5; i++) {
+            setTimeout(() => {
+                const heart = document.createElement('div');
+                heart.textContent = '💖';
+                heart.style.position = 'fixed';
+                heart.style.fontSize = '30px';
+                heart.style.pointerEvents = 'none';
+                heart.style.zIndex = '10000';
+                heart.style.left = '50%';
+                heart.style.top = '50%';
+                heart.style.transform = 'translate(-50%, -50%)';
+                heart.style.animation = 'floatHeart 2s ease-out forwards';
+                heart.style.opacity = '0';
+                
+                // Random offset
+                const offsetX = (Math.random() - 0.5) * 200;
+                const offsetY = (Math.random() - 0.5) * 200;
+                heart.style.setProperty('--offset-x', offsetX + 'px');
+                heart.style.setProperty('--offset-y', offsetY + 'px');
+                
+                document.body.appendChild(heart);
+                
+                setTimeout(() => heart.remove(), 2000);
+            }, i * 100);
+        }
+    }
+
     updateOtherPlayers() {
         this.otherPlayers.innerHTML = '';
         
@@ -1318,6 +1449,13 @@ class UnoClient {
             if (index === this.gameState.currentPlayer) {
                 playerDiv.classList.add('current');
             }
+            
+            // Make player div clickable for hearts
+            playerDiv.style.cursor = 'pointer';
+            playerDiv.title = 'Click to send 💖';
+            playerDiv.addEventListener('click', () => {
+                this.sendHeartToPlayer(player.id, player.name);
+            });
             
             const name = document.createElement('div');
             name.className = 'other-player-name';
@@ -1387,6 +1525,81 @@ class UnoClient {
         return colors[color] || '#999';
     }
 
+    startTurnTimer() {
+        // Clear any existing timer
+        this.stopTurnTimer();
+        
+        // Reset timer
+        this.turnTimeLeft = this.turnTimerDuration;
+        
+        // Update timer display
+        if (this.timerText) {
+            this.timerText.textContent = this.turnTimeLeft;
+        }
+        
+        // Show timer
+        if (this.turnTimer) {
+            this.turnTimer.style.display = 'block';
+        }
+        
+        // Reset progress circle
+        if (this.timerProgress) {
+            const circumference = 2 * Math.PI * 45;
+            this.timerProgress.style.strokeDasharray = circumference;
+            this.timerProgress.style.strokeDashoffset = 0;
+            this.timerProgress.style.stroke = '#FF69B4';
+        }
+        
+        // Start countdown
+        this.turnTimerInterval = setInterval(() => {
+            this.turnTimeLeft--;
+            
+            // Update timer text
+            if (this.timerText) {
+                this.timerText.textContent = this.turnTimeLeft;
+            }
+            
+            // Update progress circle
+            if (this.timerProgress) {
+                const progress = (this.turnTimeLeft / this.turnTimerDuration) * 100;
+                const circumference = 2 * Math.PI * 45;
+                const offset = circumference - (progress / 100) * circumference;
+                this.timerProgress.style.strokeDashoffset = offset;
+                
+                // Change color when time is running out
+                if (this.turnTimeLeft <= 5) {
+                    this.timerProgress.style.stroke = '#DC3545';
+                } else if (this.turnTimeLeft <= 10) {
+                    this.timerProgress.style.stroke = '#FF6B6B';
+                } else {
+                    this.timerProgress.style.stroke = '#FF69B4';
+                }
+            }
+            
+            // Auto-draw if time runs out
+            if (this.turnTimeLeft <= 0) {
+                this.stopTurnTimer();
+                if (this.isMyTurn() && !this.isSkipped()) {
+                    console.log('Turn timer expired - auto-drawing card');
+                    this.showNotification('Time\'s up! Drawing a card automatically...');
+                    this.drawCard();
+                }
+            }
+        }, 1000);
+    }
+
+    stopTurnTimer() {
+        if (this.turnTimerInterval) {
+            clearInterval(this.turnTimerInterval);
+            this.turnTimerInterval = null;
+        }
+        
+        // Hide timer if not my turn
+        if (this.turnTimer && !this.isMyTurn()) {
+            this.turnTimer.style.display = 'none';
+        }
+    }
+
     updateCurrentPlayerInfo() {
         console.log('Updating current player info:', this.gameState);
         
@@ -1410,10 +1623,18 @@ class UnoClient {
                 if (this.gameInfo) {
                     this.gameInfo.classList.add('your-turn');
                 }
+                // Start timer if it's my turn and not skipped
+                if (!this.isSkipped()) {
+                    this.startTurnTimer();
+                } else {
+                    this.stopTurnTimer();
+                }
             } else {
                 if (this.gameInfo) {
                     this.gameInfo.classList.remove('your-turn');
                 }
+                // Stop timer if not my turn
+                this.stopTurnTimer();
             }
             
             // Add draw penalty info
@@ -1515,6 +1736,8 @@ class UnoClient {
     createCardElement(card, clickable = false) {
         const cardDiv = document.createElement('div');
         cardDiv.className = `card ${card.color}`;
+        // Store card data for animation
+        cardDiv.setAttribute('data-card', JSON.stringify(card));
         
         // Get the Hello Kitty card image
         const cardImage = this.getCardImage(card);

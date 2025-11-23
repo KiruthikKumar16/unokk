@@ -755,6 +755,28 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('sendHeart', ({ targetPlayerId }) => {
+    const roomId = playerRooms.get(socket.id);
+    const game = rooms.get(roomId);
+    
+    if (!game) return;
+    
+    const sender = game.players.find(p => p.id === socket.id);
+    const receiver = game.players.find(p => p.id === targetPlayerId);
+    
+    if (sender && receiver) {
+      // Notify the target player
+      io.to(targetPlayerId).emit('heartReceived', { 
+        fromPlayer: sender.name 
+      });
+      
+      // Notify sender
+      socket.emit('heartSent', { 
+        toPlayer: receiver.name 
+      });
+    }
+  });
+
   socket.on('leaveGame', () => {
     console.log('Player intentionally leaving game:', socket.id);
     

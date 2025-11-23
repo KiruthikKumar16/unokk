@@ -237,6 +237,90 @@ body {
     border-color: rgba(255, 255, 255, 0.6);
 }
 
+/* Turn Timer */
+.turn-timer {
+    display: none;
+    margin-top: clamp(10px, 1.5vh, 15px);
+}
+
+.timer-circle {
+    position: relative;
+    width: clamp(50px, 6vw, 70px);
+    height: clamp(50px, 6vw, 70px);
+    margin: 0 auto;
+}
+
+.timer-svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.timer-bg {
+    fill: none;
+    stroke: rgba(255, 182, 193, 0.3);
+    stroke-width: 6;
+}
+
+.timer-progress {
+    fill: none;
+    stroke: #FF69B4;
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-dasharray: 283;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 1s linear, stroke 0.3s ease;
+}
+
+.timer-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: clamp(16px, 2.2vw, 20px);
+    font-weight: 800;
+    color: #FF69B4;
+    text-shadow: 0 2px 4px rgba(255, 105, 180, 0.3);
+}
+
+.game-info.your-turn .timer-text {
+    color: white;
+}
+
+/* Heart Animation */
+@keyframes floatHeart {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.5) translateY(0);
+    }
+    20% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1) translateY(-20px);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(calc(-50% + var(--offset-x, 0px)), calc(-50% + var(--offset-y, -100px))) scale(1.5) translateY(-100px);
+    }
+}
+
+.floatHeart {
+    animation: floatHeart 2s ease-out forwards;
+}
+
+/* Other Player Clickable for Hearts */
+.other-player {
+    transition: all 0.3s ease;
+}
+
+.other-player:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 30px rgba(255, 105, 180, 0.4);
+}
+
+.other-player:active {
+    transform: scale(0.98);
+}
+
 .current-player {
     margin-bottom: 8px;
     display: flex;
@@ -1376,7 +1460,7 @@ body {
     flex-direction: column;
 }
 
-/* Responsive Design - Enhanced for all zoom levels */
+/* Responsive Design - Enhanced for all zoom levels and screen sizes */
 @media (max-width: 768px) {
     html {
         font-size: clamp(11px, 1.1vw, 14px);
@@ -1411,11 +1495,13 @@ body {
     .other-players {
         justify-content: center;
         max-height: 20vh;
+        gap: clamp(5px, 1vw, 10px);
     }
     
     .other-player {
-        min-width: clamp(90px, 12vw, 100px);
-        padding: clamp(10px, 1.5vh, 12px);
+        min-width: clamp(80px, 10vw, 100px);
+        padding: clamp(8px, 1.2vh, 12px);
+        font-size: clamp(11px, 1.5vw, 14px);
     }
     
     .audio-controls {
@@ -1443,6 +1529,206 @@ body {
     .hand-actions {
         flex-wrap: wrap;
         gap: clamp(8px, 1.5vh, 12px);
+    }
+    
+    .timer-circle {
+        width: clamp(40px, 5vw, 60px);
+        height: clamp(40px, 5vw, 60px);
+    }
+    
+    .timer-text {
+        font-size: clamp(14px, 2vw, 18px);
+    }
+    
+    .game-info {
+        padding: clamp(6px, 1vh, 10px) clamp(12px, 2vw, 16px);
+        font-size: clamp(12px, 1.8vw, 16px);
+    }
+}
+
+/* Extra small screens (phones 5-6 inches) */
+@media (max-width: 480px) {
+    html {
+        font-size: clamp(10px, 1vw, 12px);
+    }
+    
+    .container {
+        padding: clamp(12px, 2vh, 15px);
+    }
+    
+    .menu-card {
+        min-width: min(280px, 90vw);
+        padding: clamp(18px, 3vh, 25px);
+    }
+    
+    .button-group {
+        gap: clamp(10px, 1.5vh, 12px);
+    }
+    
+    .cards-container {
+        gap: clamp(-12px, -1.5vw, -15px);
+    }
+    
+    .cards-container .card {
+        width: clamp(60px, 8vw, 68px);
+        height: clamp(85px, 11vw, 98px);
+        font-size: clamp(12px, 1.8vw, 14px);
+        margin-right: clamp(-15px, -2vw, -18px);
+    }
+    
+    .hand-actions {
+        flex-direction: column;
+        gap: clamp(8px, 1.5vh, 12px);
+    }
+    
+    .lobby-header {
+        flex-direction: column;
+        gap: clamp(10px, 2vh, 15px);
+        text-align: center;
+    }
+    
+    .voting-actions {
+        flex-direction: column;
+        gap: clamp(8px, 1.5vh, 12px);
+    }
+    
+    .btn {
+        width: 100%;
+        max-width: 100%;
+        font-size: clamp(12px, 1.6vw, 14px);
+        padding: clamp(8px, 1.2vh, 10px) clamp(15px, 2.5vw, 20px);
+    }
+    
+    .other-players {
+        flex-wrap: wrap;
+        max-height: 25vh;
+        overflow-y: auto;
+    }
+    
+    .other-player {
+        min-width: clamp(70px, 9vw, 90px);
+        padding: clamp(6px, 1vh, 10px);
+    }
+    
+    .game-center {
+        padding: clamp(10px, 1.5vh, 15px);
+        gap: clamp(10px, 1.5vw, 15px);
+    }
+    
+    .deck-area {
+        gap: clamp(15px, 2vw, 20px);
+    }
+    
+    .timer-circle {
+        width: clamp(35px, 4.5vw, 50px);
+        height: clamp(35px, 4.5vw, 50px);
+    }
+}
+
+/* Very small screens (5 inch phones) */
+@media (max-width: 360px) {
+    .cards-container .card {
+        width: clamp(55px, 7vw, 65px);
+        height: clamp(80px, 10vw, 95px);
+        font-size: clamp(11px, 1.6vw, 13px);
+    }
+    
+    .deck, .discard-pile {
+        width: clamp(70px, 9vw, 80px);
+        height: clamp(100px, 13vw, 120px);
+    }
+    
+    .other-player {
+        min-width: clamp(60px, 8vw, 80px);
+        font-size: clamp(10px, 1.4vw, 12px);
+    }
+}
+
+/* Large screens (13-16 inch laptops) */
+@media (min-width: 1400px) {
+    .game-container {
+        max-width: 1600px;
+    }
+    
+    .cards-container .card {
+        width: clamp(140px, 12vw, 150px);
+        height: clamp(200px, 17vw, 220px);
+    }
+    
+    .deck, .discard-pile {
+        width: clamp(160px, 14vw, 170px);
+        height: clamp(235px, 20vw, 250px);
+    }
+}
+
+/* Landscape orientation for mobile */
+@media (max-height: 600px) and (orientation: landscape) {
+    .game-container {
+        grid-template-rows: auto 1fr auto;
+        gap: clamp(5px, 1vh, 10px);
+    }
+    
+    .player-hand {
+        max-height: 35vh;
+        padding: clamp(8px, 1.5vh, 15px);
+    }
+    
+    .other-players {
+        max-height: 20vh;
+    }
+    
+    .cards-container .card {
+        width: clamp(60px, 7vw, 70px);
+        height: clamp(90px, 10vw, 105px);
+    }
+}
+
+/* Touch improvements for mobile devices */
+@media (hover: none) and (pointer: coarse) {
+    .card {
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: rgba(255, 105, 180, 0.3);
+    }
+    
+    .btn {
+        min-height: 44px; /* Minimum touch target size (iOS/Android standard) */
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: rgba(255, 105, 180, 0.3);
+    }
+    
+    .other-player {
+        min-height: 44px;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: rgba(255, 105, 180, 0.3);
+    }
+    
+    /* Larger tap targets on mobile */
+    .cards-container .card {
+        margin-right: clamp(-25px, -3vw, -30px);
+    }
+    
+    /* Better spacing for touch */
+    .hand-actions {
+        gap: clamp(12px, 2vh, 15px);
+    }
+    
+    .button-group {
+        gap: clamp(12px, 2vh, 15px);
+    }
+    
+    /* Prevent text selection on double tap */
+    .card, .btn, .other-player {
+        -webkit-user-select: none;
+        user-select: none;
+    }
+    
+    /* Better touch feedback */
+    .card:active {
+        transform: translateY(-8px) scale(1.05);
+    }
+    
+    .btn:active {
+        transform: translateY(0) scale(0.98);
     }
 }
 
