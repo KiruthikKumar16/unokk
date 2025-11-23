@@ -308,234 +308,15 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: clamp(15px, 2vh, 25px);
+    gap: 20px;
     position: relative;
-    padding: clamp(15px, 2vh, 25px);
+    padding: 20px;
     pointer-events: none;
     z-index: 15;
-    min-height: clamp(300px, 40vh, 500px);
-    background: radial-gradient(circle at center, rgba(255, 240, 245, 0.4) 0%, rgba(255, 255, 255, 0.1) 70%, transparent 100%);
-    border-radius: clamp(20px, 3vw, 30px);
 }
 
 .game-center > * {
     pointer-events: all;
-}
-
-/* Center Animations Container */
-.center-animations {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 1;
-    overflow: hidden;
-}
-
-.floating-sparkles {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-}
-
-.sparkle {
-    position: absolute;
-    pointer-events: none;
-}
-
-@keyframes sparkleFloat {
-    0% {
-        transform: translateY(0) translateX(0) scale(0);
-        opacity: 0;
-    }
-    50% {
-        opacity: 1;
-    }
-    100% {
-        transform: translateY(-100px) translateX(20px) scale(1);
-        opacity: 0;
-    }
-}
-
-.rotating-ring {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: clamp(200px, 30vw, 350px);
-    height: clamp(200px, 30vw, 350px);
-    border: 4px solid rgba(255, 182, 193, 0.3);
-    border-radius: 50%;
-    border-top-color: rgba(255, 105, 180, 0.8);
-    border-right-color: rgba(255, 105, 180, 0.5);
-    animation: rotateRing 8s linear infinite;
-    pointer-events: none;
-    box-shadow: 0 0 30px rgba(255, 105, 180, 0.2);
-}
-
-@keyframes rotateRing {
-    0% { transform: translate(-50%, -50%) rotate(0deg); }
-    100% { transform: translate(-50%, -50%) rotate(360deg); }
-}
-
-/* Direction Indicator Circle */
-.direction-indicator-circle {
-    position: relative;
-    width: clamp(120px, 15vw, 180px);
-    height: clamp(120px, 15vw, 180px);
-    margin-bottom: clamp(10px, 1.5vh, 15px);
-    z-index: 5;
-}
-
-.direction-svg {
-    width: 100%;
-    height: 100%;
-    filter: drop-shadow(0 4px 8px rgba(255, 105, 180, 0.3));
-}
-
-.direction-track {
-    stroke-dasharray: 5, 5;
-    animation: trackPulse 3s ease-in-out infinite;
-}
-
-@keyframes trackPulse {
-    0%, 100% { opacity: 0.3; }
-    50% { opacity: 0.6; }
-}
-
-.direction-arrow {
-    stroke-dasharray: 10, 5;
-    animation: arrowFlow 2s linear infinite;
-    filter: drop-shadow(0 2px 4px rgba(255, 105, 180, 0.5));
-}
-
-.direction-arrow.clockwise {
-    animation: arrowFlow 2s linear infinite;
-}
-
-.direction-arrow.counterclockwise {
-    animation: arrowFlowReverse 2s linear infinite;
-}
-
-@keyframes arrowFlow {
-    0% { stroke-dashoffset: 0; }
-    100% { stroke-dashoffset: 15; }
-}
-
-@keyframes arrowFlowReverse {
-    0% { stroke-dashoffset: 15; }
-    100% { stroke-dashoffset: 0; }
-}
-
-.direction-text {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: clamp(32px, 4vw, 48px);
-    font-weight: 800;
-    color: #FF69B4;
-    text-shadow: 0 2px 8px rgba(255, 105, 180, 0.5);
-    animation: directionPulse 1.5s ease-in-out infinite;
-    z-index: 10;
-}
-
-.direction-text.clockwise {
-    animation: directionPulse 1.5s ease-in-out infinite;
-}
-
-.direction-text.counterclockwise {
-    animation: directionPulseReverse 1.5s ease-in-out infinite;
-}
-
-@keyframes directionPulse {
-    0%, 100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
-    50% { transform: translate(-50%, -50%) scale(1.2) rotate(10deg); }
-}
-
-@keyframes directionPulseReverse {
-    0%, 100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
-    50% { transform: translate(-50%, -50%) scale(1.2) rotate(-10deg); }
-}
-
-/* Wild Card Color Display */
-.wild-color-display {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: clamp(8px, 1vh, 12px);
-    background: rgba(255, 255, 255, 0.95);
-    padding: clamp(12px, 1.5vh, 18px) clamp(20px, 2.5vw, 30px);
-    border-radius: clamp(15px, 2vw, 20px);
-    box-shadow: 0 8px 25px rgba(255, 105, 180, 0.3);
-    border: 2px solid rgba(255, 182, 193, 0.4);
-    backdrop-filter: blur(10px);
-    z-index: 10;
-    animation: wildColorAppear 0.5s ease-out;
-}
-
-@keyframes wildColorAppear {
-    0% {
-        opacity: 0;
-        transform: scale(0.8);
-    }
-    100% {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
-.wild-color-label {
-    font-size: clamp(12px, 1.5vw, 14px);
-    font-weight: 700;
-    color: #FF69B4;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.wild-color-circle {
-    width: clamp(50px, 6vw, 70px);
-    height: clamp(50px, 6vw, 70px);
-    border-radius: 50%;
-    border: 4px solid white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: clamp(14px, 1.8vw, 18px);
-    font-weight: 800;
-    color: white;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    animation: colorCirclePulse 2s ease-in-out infinite;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-}
-
-@keyframes colorCirclePulse {
-    0%, 100% {
-        transform: scale(1);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    }
-    50% {
-        transform: scale(1.1);
-        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
-    }
-}
-
-.wild-color-indicator {
-    animation: colorPulse 2s ease-in-out infinite;
-}
-
-@keyframes colorPulse {
-    0%, 100% {
-        transform: translateX(-50%) scale(1);
-        box-shadow: 0 0 20px currentColor, 0 4px 10px rgba(0,0,0,0.3);
-    }
-    50% {
-        transform: translateX(-50%) scale(1.15);
-        box-shadow: 0 0 30px currentColor, 0 6px 15px rgba(0,0,0,0.4);
-    }
 }
 
 .game-center::before {
@@ -544,50 +325,17 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: clamp(250px, 35vw, 400px);
-    height: clamp(250px, 35vw, 400px);
-    background: radial-gradient(circle, rgba(255, 182, 193, 0.15) 0%, transparent 70%);
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255, 182, 193, 0.1) 0%, transparent 70%);
     border-radius: 50%;
     animation: centerGlow 4s ease-in-out infinite;
     z-index: -1;
 }
 
 @keyframes centerGlow {
-    0%, 100% { 
-        opacity: 0.3; 
-        transform: translate(-50%, -50%) scale(1); 
-    }
-    50% { 
-        opacity: 0.6; 
-        transform: translate(-50%, -50%) scale(1.15); 
-    }
-}
-
-/* Card Play Particle Effects */
-@keyframes particleExplode {
-    0% {
-        transform: translate(0, 0) scale(1);
-        opacity: 1;
-    }
-    100% {
-        transform: translate(calc(var(--target-x) - var(--start-x, 0px)), calc(var(--target-y) - var(--start-y, 0px))) scale(0);
-        opacity: 0;
-    }
-}
-
-@keyframes particleImpact {
-    0% {
-        transform: translate(0, 0) scale(1);
-        opacity: 1;
-    }
-    100% {
-        transform: translate(calc(var(--target-x) - var(--start-x, 0px)), calc(var(--target-y) - var(--start-y, 0px))) scale(0);
-        opacity: 0;
-    }
-}
-
-.card-particle {
-    box-shadow: 0 0 10px currentColor;
+    0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 0.6; transform: translate(-50%, -50%) scale(1.1); }
 }
 
 .deck-area {

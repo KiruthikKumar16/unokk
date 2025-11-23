@@ -69,19 +69,6 @@ class UnoClient {
         this.currentPlayerInfo = document.getElementById('currentPlayerInfo');
         this.currentPlayerName = document.getElementById('currentPlayerName');
         this.directionIndicator = document.getElementById('directionIndicator');
-        this.directionIndicatorCircle = document.getElementById('directionIndicatorCircle');
-        this.directionArrow = document.getElementById('directionArrow');
-        this.directionText = document.getElementById('directionText');
-        this.wildColorDisplay = document.getElementById('wildColorDisplay');
-        this.wildColorCircle = document.getElementById('wildColorCircle');
-        this.centerAnimations = document.getElementById('centerAnimations');
-        
-        // Initialize direction indicator if elements exist
-        if (this.directionArrow) {
-            // Set initial path
-            this.directionArrow.setAttribute('d', 'M 100 20 A 80 80 0 1 1 100 180');
-        }
-        
         this.turnTimer = document.getElementById('turnTimer');
         this.timerText = document.getElementById('timerText');
         this.timerProgress = document.querySelector('.timer-progress');
@@ -1139,16 +1126,12 @@ class UnoClient {
         });
 
         if (cardElement && this.discardPile) {
-            // Create particle effect at card position
-            this.createCardPlayParticles(cardElement);
-            
             // Clone card for animation
             const animatedCard = cardElement.cloneNode(true);
             animatedCard.style.position = 'fixed';
             animatedCard.style.zIndex = '10000';
             animatedCard.style.pointerEvents = 'none';
             animatedCard.style.transition = 'all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
-            animatedCard.style.transform = 'rotate(0deg) scale(1)';
             
             // Get positions
             const cardRect = cardElement.getBoundingClientRect();
@@ -1163,88 +1146,20 @@ class UnoClient {
             
             document.body.appendChild(animatedCard);
             
-            // Force reflow
-            void animatedCard.offsetWidth;
-            
-            // Animate to discard pile with rotation and scale
-            const centerX = discardRect.left + discardRect.width / 2;
-            const centerY = discardRect.top + discardRect.height / 2;
-            const rotation = (Math.random() - 0.5) * 20; // Random rotation between -10 and 10 degrees
-            
+            // Animate to discard pile
             requestAnimationFrame(() => {
-                animatedCard.style.left = centerX - cardRect.width / 2 + 'px';
-                animatedCard.style.top = centerY - cardRect.height / 2 + 'px';
-                animatedCard.style.transform = `rotate(${rotation}deg) scale(0.95)`;
-                animatedCard.style.opacity = '0.9';
+                animatedCard.style.left = discardRect.left + 'px';
+                animatedCard.style.top = discardRect.top + 'px';
+                animatedCard.style.width = discardRect.width + 'px';
+                animatedCard.style.height = discardRect.height + 'px';
+                animatedCard.style.transform = 'rotate(360deg) scale(1.1)';
+                animatedCard.style.opacity = '0.8';
             });
             
-            // Create impact particles at discard pile
+            // Remove after animation
             setTimeout(() => {
-                this.createCardImpactParticles(centerX, centerY);
                 animatedCard.remove();
             }, 600);
-        }
-    }
-    
-    createCardPlayParticles(cardElement) {
-        const rect = cardElement.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        
-        for (let i = 0; i < 8; i++) {
-            const particle = document.createElement('div');
-            particle.className = 'card-particle';
-            const angle = (Math.PI * 2 * i) / 8;
-            const distance = 30 + Math.random() * 20;
-            const size = 4 + Math.random() * 4;
-            
-            particle.style.cssText = `
-                position: fixed;
-                left: ${centerX}px;
-                top: ${centerY}px;
-                width: ${size}px;
-                height: ${size}px;
-                background: radial-gradient(circle, #FFD700 0%, #FF69B4 100%);
-                border-radius: 50%;
-                pointer-events: none;
-                z-index: 10001;
-                animation: particleExplode 0.6s ease-out forwards;
-                --target-x: ${centerX + Math.cos(angle) * distance}px;
-                --target-y: ${centerY + Math.sin(angle) * distance}px;
-            `;
-            
-            document.body.appendChild(particle);
-            setTimeout(() => particle.remove(), 600);
-        }
-    }
-    
-    createCardImpactParticles(x, y) {
-        for (let i = 0; i < 12; i++) {
-            const particle = document.createElement('div');
-            particle.className = 'card-particle';
-            const angle = (Math.PI * 2 * i) / 12;
-            const distance = 40 + Math.random() * 30;
-            const size = 5 + Math.random() * 5;
-            const colors = ['#FF69B4', '#FF1493', '#FFD700', '#FFB6C1'];
-            const color = colors[Math.floor(Math.random() * colors.length)];
-            
-            particle.style.cssText = `
-                position: fixed;
-                left: ${x}px;
-                top: ${y}px;
-                width: ${size}px;
-                height: ${size}px;
-                background: radial-gradient(circle, ${color} 0%, transparent 100%);
-                border-radius: 50%;
-                pointer-events: none;
-                z-index: 10001;
-                animation: particleImpact 0.8s ease-out forwards;
-                --target-x: ${x + Math.cos(angle) * distance}px;
-                --target-y: ${y + Math.sin(angle) * distance}px;
-            `;
-            
-            document.body.appendChild(particle);
-            setTimeout(() => particle.remove(), 800);
         }
     }
 
@@ -1487,66 +1402,8 @@ class UnoClient {
         // Update discard pile
         this.updateDiscardPile();
         
-        // Update direction indicator
-        this.updateDirectionIndicator();
-        
         // Update player hand
         this.updatePlayerHand();
-        
-        // Add center animations
-        this.updateCenterAnimations();
-    }
-    
-    updateCenterAnimations() {
-        if (!this.centerAnimations) return;
-        
-        // Create floating sparkles continuously
-        this.createFloatingSparkles();
-        
-        // Create sparkles periodically
-        if (!this.sparkleInterval) {
-            this.sparkleInterval = setInterval(() => {
-                this.createFloatingSparkles();
-            }, 2000);
-        }
-    }
-    
-    createFloatingSparkles() {
-        if (!this.centerAnimations) return;
-        
-        // Limit sparkles to avoid performance issues
-        const existingSparkles = this.centerAnimations.querySelectorAll('.sparkle');
-        if (existingSparkles.length > 20) return;
-        
-        for (let i = 0; i < 5; i++) {
-            setTimeout(() => {
-                const sparkle = document.createElement('div');
-                sparkle.className = 'sparkle';
-                const size = Math.random() * 8 + 6;
-                const duration = Math.random() * 4 + 3;
-                sparkle.style.cssText = `
-                    position: absolute;
-                    width: ${size}px;
-                    height: ${size}px;
-                    background: radial-gradient(circle, #FFD700 0%, #FF69B4 50%, transparent 100%);
-                    border-radius: 50%;
-                    left: ${Math.random() * 100}%;
-                    top: ${Math.random() * 100}%;
-                    pointer-events: none;
-                    animation: sparkleFloat ${duration}s ease-in-out forwards;
-                    opacity: ${Math.random() * 0.6 + 0.4};
-                    box-shadow: 0 0 10px #FFD700;
-                `;
-                this.centerAnimations.appendChild(sparkle);
-                
-                // Remove after animation
-                setTimeout(() => {
-                    if (sparkle.parentNode) {
-                        sparkle.remove();
-                    }
-                }, duration * 1000);
-            }, i * 150);
-        }
     }
 
     sendHeartToPlayer(playerId, playerName) {
@@ -1794,107 +1651,32 @@ class UnoClient {
         
         // For wild cards, create a card with the chosen color
         let displayCard = this.gameState.topCard;
-        // Check if it's actually a wild card - must have type: 'wild'
-        const isWildCard = this.gameState.topCard.type === 'wild';
-        
-        // Only show wild color display for ACTUAL wild cards that were played
-        if (isWildCard && this.gameState.currentColor) {
+        if (this.gameState.topCard.color === 'wild' && this.gameState.currentColor) {
             displayCard = {
                 ...this.gameState.topCard,
                 color: this.gameState.currentColor
             };
-            
-            // Show wild color display prominently ONLY for wild cards
-            if (this.wildColorDisplay && this.wildColorCircle) {
-                this.wildColorDisplay.style.display = 'flex';
-                const colorValue = this.getColorValue(this.gameState.currentColor);
-                this.wildColorCircle.style.background = colorValue;
-                this.wildColorCircle.style.boxShadow = `0 0 25px ${colorValue}CC`;
-                
-                // Add color name
-                const colorName = this.gameState.currentColor.charAt(0).toUpperCase() + 
-                                this.gameState.currentColor.slice(1);
-                this.wildColorCircle.textContent = colorName;
-            }
-        } else {
-            // ALWAYS hide wild color display for non-wild cards
-            if (this.wildColorDisplay) {
-                this.wildColorDisplay.style.display = 'none';
-            }
         }
         
         const cardElement = this.createCardElement(displayCard);
         this.discardPile.appendChild(cardElement);
         
-        // Add prominent color indicator for wild cards
-        if (isWildCard && this.gameState.currentColor) {
-            const colorIndicator = document.createElement('div');
-            colorIndicator.className = 'wild-color-indicator';
-            const colorValue = this.getColorValue(this.gameState.currentColor);
-            colorIndicator.style.cssText = `
-                position: absolute;
-                top: -15px;
-                left: 50%;
-                transform: translateX(-50%);
-                width: 40px;
-                height: 40px;
-                border-radius: 50%;
-                background: ${colorValue};
-                border: 4px solid white;
-                box-shadow: 0 0 20px ${colorValue}, 0 4px 10px rgba(0,0,0,0.3);
-                z-index: 10;
-                animation: colorPulse 2s ease-in-out infinite;
-            `;
-            this.discardPile.appendChild(colorIndicator);
-        }
-        
         // Add current color indicator for non-wild cards
-        if (this.gameState.currentColor && this.gameState.currentColor !== 'wild' && !isWildCard) {
+        if (this.gameState.currentColor && this.gameState.currentColor !== 'wild' && this.gameState.topCard.color !== 'wild') {
             const colorIndicator = document.createElement('div');
             colorIndicator.className = 'current-color-indicator';
             colorIndicator.style.cssText = `
                 position: absolute;
                 top: -10px;
                 right: -10px;
-                width: 25px;
-                height: 25px;
+                width: 20px;
+                height: 20px;
                 border-radius: 50%;
                 background: ${this.getColorValue(this.gameState.currentColor)};
-                border: 3px solid white;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                border: 2px solid white;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.3);
             `;
             this.discardPile.appendChild(colorIndicator);
-        }
-    }
-    
-    updateDirectionIndicator() {
-        if (!this.gameState || !this.directionIndicatorCircle || !this.directionArrow) return;
-        
-        const direction = this.gameState.direction || 1;
-        const isClockwise = direction === 1;
-        
-        // Update circular arrow path
-        const radius = 80;
-        const centerX = 100;
-        const centerY = 100;
-        
-        // Create circular path based on direction
-        let pathData;
-        if (isClockwise) {
-            // Clockwise: start at top, go right
-            pathData = `M ${centerX} ${centerY - radius} A ${radius} ${radius} 0 1 1 ${centerX + radius * 0.7} ${centerY + radius * 0.7}`;
-        } else {
-            // Counter-clockwise: start at top, go left
-            pathData = `M ${centerX} ${centerY - radius} A ${radius} ${radius} 0 1 0 ${centerX - radius * 0.7} ${centerY + radius * 0.7}`;
-        }
-        
-        this.directionArrow.setAttribute('d', pathData);
-        this.directionArrow.setAttribute('class', `direction-arrow ${isClockwise ? 'clockwise' : 'counterclockwise'}`);
-        
-        // Update direction text
-        if (this.directionText) {
-            this.directionText.textContent = isClockwise ? '↻' : '↺';
-            this.directionText.className = `direction-text ${isClockwise ? 'clockwise' : 'counterclockwise'}`;
         }
     }
     
