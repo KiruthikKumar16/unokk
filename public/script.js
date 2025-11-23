@@ -470,6 +470,18 @@ class UnoClient {
             console.log('Player left:', data.playerName);
             this.showNotification(`${data.playerName} left the game 🚪`);
         });
+
+        this.socket.on('gameEndedSinglePlayer', (data) => {
+            console.log('Game ended - only one player remaining');
+            this.showNotification(data.message || 'All other players left. Returning to lobby...');
+            this.sounds.notification();
+            
+            // Return to lobby after a short delay
+            setTimeout(() => {
+                this.showLobby();
+                this.updateLobby();
+            }, 2000);
+        });
         
         this.socket.on('gameWon', (data) => {
             const winner = this.gameState.players.find(p => p.id === data.winner);

@@ -783,6 +783,17 @@ io.on('connection', (socket) => {
               rooms.delete(roomId);
             }
           }, 30000);
+        } else if (game.players.length === 1 && game.gameStarted) {
+          // Only one player remaining in an active game - return to lobby
+          console.log('Only one player remaining, ending game and returning to lobby');
+          const remainingPlayer = game.players[0];
+          game.gameStarted = false;
+          game.gameEnded = true;
+          game.resetGame();
+          io.to(roomId).emit('gameEndedSinglePlayer', { 
+            message: 'All other players left. Returning to lobby...' 
+          });
+          io.to(roomId).emit('gameUpdate', game.getGameState());
         } else {
           console.log('Room still has players, updating game state');
           io.to(roomId).emit('gameUpdate', game.getGameState());
@@ -820,6 +831,17 @@ io.on('connection', (socket) => {
               rooms.delete(roomId);
             }
           }, 30000);
+        } else if (game.players.length === 1 && game.gameStarted) {
+          // Only one player remaining in an active game - return to lobby
+          console.log('Only one player remaining, ending game and returning to lobby');
+          const remainingPlayer = game.players[0];
+          game.gameStarted = false;
+          game.gameEnded = true;
+          game.resetGame();
+          io.to(roomId).emit('gameEndedSinglePlayer', { 
+            message: 'All other players left. Returning to lobby...' 
+          });
+          io.to(roomId).emit('gameUpdate', game.getGameState());
         } else {
           console.log('Room still has players, updating game state');
           io.to(roomId).emit('gameUpdate', game.getGameState());
