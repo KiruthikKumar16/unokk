@@ -15,11 +15,16 @@ class UnoClient {
         this.backgroundMusic = null;
         this.sounds = {};
         
+        // Page refresh warning
+        this.warningEnabled = false;
+        this.beforeUnloadHandler = null;
+        
         this.initializeElements();
         this.bindEvents();
         this.initializeAudio();
         this.createFloatingElements();
         this.createAudioControls();
+        this.setupPageRefreshWarning();
         this.connectSocket();
         console.log('UNO Client initialized');
     }
@@ -512,6 +517,7 @@ class UnoClient {
 
     showMainMenu() {
         this.showScreen(this.mainMenu);
+        this.disablePageRefreshWarning();
     }
 
     showLobby() {
@@ -520,12 +526,14 @@ class UnoClient {
         
         // Add click-to-copy functionality to room code
         this.setupRoomCodeCopy();
+        this.enablePageRefreshWarning();
     }
 
     showGameScreen() {
         this.showScreen(this.gameScreen);
         // Start background music when game starts
         this.startBackgroundMusic();
+        this.enablePageRefreshWarning();
     }
 
     startBackgroundMusic() {
@@ -1414,6 +1422,7 @@ class UnoClient {
     leaveGame() {
         console.log('Leaving game');
         this.sounds.buttonClick();
+        this.disablePageRefreshWarning();
         this.socket.disconnect();
         this.resetToMainMenu();
     }
@@ -1449,6 +1458,36 @@ class UnoClient {
 
     // Old playAgain method removed - now using voting system
 
+    setupPageRefreshWarning() {
+        // Create the beforeunload handler
+        this.beforeUnloadHandler = (e) => {
+            if (this.warningEnabled) {
+                // Standard way to show warning
+                e.preventDefault();
+                // Modern browsers require returnValue to be set
+                e.returnValue = '';
+                // Return message (some browsers may ignore this)
+                return 'Are you sure you want to leave? You will be disconnected from the game!';
+            }
+        };
+    }
+
+    enablePageRefreshWarning() {
+        if (!this.warningEnabled) {
+            this.warningEnabled = true;
+            window.addEventListener('beforeunload', this.beforeUnloadHandler);
+            console.log('Page refresh warning enabled');
+        }
+    }
+
+    disablePageRefreshWarning() {
+        if (this.warningEnabled) {
+            this.warningEnabled = false;
+            window.removeEventListener('beforeunload', this.beforeUnloadHandler);
+            console.log('Page refresh warning disabled');
+        }
+    }
+
     resetToMainMenu() {
         this.hideGameOver();
         this.showMainMenu();
@@ -1460,6 +1499,9 @@ class UnoClient {
         // Stop background music
         this.audioEnabled = false;
         setTimeout(() => { this.audioEnabled = true; }, 1000);
+        
+        // Disable warning when leaving game
+        this.disablePageRefreshWarning();
         
         // Reconnect to allow creating/joining new games
         this.socket.disconnect();
