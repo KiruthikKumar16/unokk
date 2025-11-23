@@ -70,6 +70,7 @@ class UnoClient {
         this.cardsContainer = document.getElementById('cardsContainer');
         this.drawCardBtn = document.getElementById('drawCardBtn');
         this.unoBtn = document.getElementById('unoBtn');
+        this.leaveGameDuringPlayBtn = document.getElementById('leaveGameDuringPlayBtn');
         this.gameInfo = document.querySelector('.game-info');
         
         // Modals
@@ -124,6 +125,7 @@ class UnoClient {
         // Game events
         this.drawCardBtn.addEventListener('click', () => this.drawCard());
         this.unoBtn.addEventListener('click', () => this.callUno());
+        this.leaveGameDuringPlayBtn.addEventListener('click', () => this.leaveGameDuringPlay());
         this.deck.addEventListener('click', () => this.drawCard());
         
         // Color picker events
@@ -462,6 +464,11 @@ class UnoClient {
         this.socket.on('unoCalled', (data) => {
             console.log('UNO called by:', data.playerName);
             this.showNotification(`${data.playerName} called UNO! 🎉`);
+        });
+
+        this.socket.on('playerLeft', (data) => {
+            console.log('Player left:', data.playerName);
+            this.showNotification(`${data.playerName} left the game 🚪`);
         });
         
         this.socket.on('gameWon', (data) => {
@@ -1446,6 +1453,22 @@ class UnoClient {
             this.cardsContainer.appendChild(cardElement);
         });
         
+        // Check for auto-play scenarios (only one option available)
+        if (this.isMyTurn() && !this.isSkipped() && this.gameState && this.gameState.drawCount > 0) {
+            // Check if player can stack any cards
+            const canStack = this.playerHand.some(card => this.canPlayCard(card));
+            
+            if (!canStack) {
+                // Player cannot stack, must draw penalty cards - auto-play
+                console.log('Auto-playing: Player must draw penalty cards (no stackable cards)');
+                setTimeout(() => {
+                    if (this.isMyTurn() && this.gameState.drawCount > 0) {
+                        this.drawCard();
+                    }
+                }, 1000); // Small delay for better UX
+            }
+        }
+        
         // Update draw button text and state based on draw count and turn
         if (!this.isMyTurn() || this.isSkipped()) {
             this.drawCardBtn.disabled = true;
@@ -1705,6 +1728,17 @@ class UnoClient {
         this.disablePageRefreshWarning();
         this.socket.disconnect();
         this.resetToMainMenu();
+    }
+
+    leaveGameDuringPlay() {
+        if (confirm('Are you sure you want to leave the game? Other players will be notified.')) {
+            console.log('Leaving game during play');
+            this.sounds.buttonClick();
+            this.socket.emit('leaveGame');
+            this.disablePageRefreshWarning();
+            this.socket.disconnect();
+            this.resetToMainMenu();
+        }
     }
 
     updateVoteDisplay(votes, total) {

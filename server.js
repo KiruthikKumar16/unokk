@@ -755,6 +755,43 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('leaveGame', () => {
+    console.log('Player intentionally leaving game:', socket.id);
+    
+    const roomId = playerRooms.get(socket.id);
+    if (roomId) {
+      const game = rooms.get(roomId);
+      if (game) {
+        const player = game.players.find(p => p.id === socket.id);
+        const playerName = player ? player.name : 'Unknown Player';
+        
+        console.log('Removing player from room:', roomId, 'Player:', playerName);
+        game.removePlayer(socket.id);
+        
+        // Notify other players that this player left
+        if (game.players.length > 0) {
+          io.to(roomId).emit('playerLeft', { playerName: playerName });
+        }
+        
+        if (game.players.length === 0) {
+          console.log('Room is empty, scheduling deletion in 30 seconds:', roomId);
+          // Keep room for 30 seconds after last player leaves
+          setTimeout(() => {
+            const currentGame = rooms.get(roomId);
+            if (currentGame && currentGame.players.length === 0) {
+              console.log('Deleting empty room:', roomId);
+              rooms.delete(roomId);
+            }
+          }, 30000);
+        } else {
+          console.log('Room still has players, updating game state');
+          io.to(roomId).emit('gameUpdate', game.getGameState());
+        }
+      }
+      playerRooms.delete(socket.id);
+    }
+  });
+
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
     
@@ -762,8 +799,16 @@ io.on('connection', (socket) => {
     if (roomId) {
       const game = rooms.get(roomId);
       if (game) {
-        console.log('Removing player from room:', roomId);
+        const player = game.players.find(p => p.id === socket.id);
+        const playerName = player ? player.name : 'Unknown Player';
+        
+        console.log('Removing player from room:', roomId, 'Player:', playerName);
         game.removePlayer(socket.id);
+        
+        // Notify other players that this player left (if game is in progress)
+        if (game.gameStarted && game.players.length > 0) {
+          io.to(roomId).emit('playerLeft', { playerName: playerName });
+        }
         
         if (game.players.length === 0) {
           console.log('Room is empty, scheduling deletion in 30 seconds:', roomId);
