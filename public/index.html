@@ -102,13 +102,36 @@
         <!-- Game Screen -->
         <div id="gameScreen" class="screen">
             <div class="game-container">
-                <!-- Other Players -->
-                <div class="other-players" id="otherPlayers">
-                    <!-- Other players' hands will be shown here -->
+                <!-- Circular Player Layout -->
+                <div class="players-circle-container" id="playersCircleContainer">
+                    <svg class="players-arrows" id="playersArrows" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet"></svg>
+                    <div class="players-circle" id="playersCircle">
+                        <!-- Players will be positioned in a circle here -->
+                    </div>
                 </div>
 
                 <!-- Game Center -->
                 <div class="game-center">
+                    <!-- Animated Background Effects -->
+                    <div class="center-animations" id="centerAnimations">
+                        <div class="floating-sparkles"></div>
+                        <div class="rotating-ring"></div>
+                    </div>
+                    
+                    <!-- Direction Indicator Circle -->
+                    <div class="direction-indicator-circle" id="directionIndicatorCircle">
+                        <svg class="direction-svg" viewBox="0 0 200 200">
+                            <circle class="direction-track" cx="100" cy="100" r="80" fill="none" stroke="rgba(255, 182, 193, 0.3)" stroke-width="4"/>
+                            <path class="direction-arrow" id="directionArrow" d="M 100 20 L 100 20" fill="none" stroke="#FF69B4" stroke-width="6" stroke-linecap="round" marker-end="url(#arrowhead)"/>
+                            <defs>
+                                <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+                                    <polygon points="0 0, 10 5, 0 10" fill="#FF69B4"/>
+                                </marker>
+                            </defs>
+                        </svg>
+                        <div class="direction-text" id="directionText">→</div>
+                    </div>
+                    
                     <div class="deck-area">
                         <div class="deck" id="deck">
                             <div class="card card-back"></div>
@@ -118,13 +141,13 @@
                         </div>
                     </div>
                     
+                    <!-- Wild Card Color Display -->
+                    <div class="wild-color-display" id="wildColorDisplay" style="display: none;">
+                        <div class="wild-color-label">Chosen Color:</div>
+                        <div class="wild-color-circle" id="wildColorCircle"></div>
+                    </div>
+                    
                     <div class="game-info">
-                        <div class="current-player" id="currentPlayerInfo">
-                            🌟 Current Player: <span id="currentPlayerName"></span>
-                        </div>
-                        <div class="direction" id="directionIndicator">
-                            🎀 Direction: <span class="arrow">→</span>
-                        </div>
                         <div class="turn-timer" id="turnTimer">
                             <div class="timer-circle">
                                 <svg class="timer-svg" viewBox="0 0 100 100">
