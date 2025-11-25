@@ -102,12 +102,9 @@
         <!-- Game Screen -->
         <div id="gameScreen" class="screen">
             <div class="game-container">
-                <!-- Circular Player Layout -->
-                <div class="players-circle-container" id="playersCircleContainer">
-                    <svg class="players-arrows" id="playersArrows" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet"></svg>
-                    <div class="players-circle" id="playersCircle">
-                        <!-- Players will be positioned in a circle here -->
-                    </div>
+                <!-- Other Players -->
+                <div class="other-players" id="otherPlayers">
+                    <!-- Other players' hands will be shown here -->
                 </div>
 
                 <!-- Game Center -->
@@ -122,6 +119,12 @@
                     </div>
                     
                     <div class="game-info">
+                        <div class="current-player" id="currentPlayerInfo">
+                            🌟 Current Player: <span id="currentPlayerName"></span>
+                        </div>
+                        <div class="direction" id="directionIndicator">
+                            🎀 Direction: <span class="arrow">→</span>
+                        </div>
                         <div class="turn-timer" id="turnTimer">
                             <div class="timer-circle">
                                 <svg class="timer-svg" viewBox="0 0 100 100">

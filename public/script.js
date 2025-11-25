@@ -61,9 +61,7 @@ class UnoClient {
         this.startGameBtn = document.getElementById('startGameBtn');
         
         // Game elements
-        this.playersCircleContainer = document.getElementById('playersCircleContainer');
-        this.playersCircle = document.getElementById('playersCircle');
-        this.playersArrows = document.getElementById('playersArrows');
+        this.otherPlayers = document.getElementById('otherPlayers');
         this.deck = document.getElementById('deck');
         this.discardPile = document.getElementById('discardPile');
         this.currentPlayerInfo = document.getElementById('currentPlayerInfo');
@@ -171,17 +169,6 @@ class UnoClient {
         // Add kawaii click effects
         document.addEventListener('click', (e) => {
             this.createClickEffect(e.clientX, e.clientY);
-        });
-        
-        // Redraw arrows on window resize
-        let resizeTimeout;
-        window.addEventListener('resize', () => {
-            clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(() => {
-                if (this.gameState && this.gameState.players) {
-                    this.updateOtherPlayers();
-                }
-            }, 250);
         });
     }
 
@@ -1396,11 +1383,17 @@ class UnoClient {
     updateGameState() {
         if (!this.gameState) return;
         
-        // Update circular player layout (includes current player and direction arrows)
+        // Update other players
         this.updateOtherPlayers();
         
         // Update discard pile
         this.updateDiscardPile();
+        
+        // Update current player info
+        this.updateCurrentPlayerInfo();
+        
+        // Update direction indicator
+        this.updateDirection();
         
         // Update player hand
         this.updatePlayerHand();
@@ -1446,201 +1439,43 @@ class UnoClient {
     }
 
     updateOtherPlayers() {
-        if (!this.playersCircle || !this.gameState) return;
+        this.otherPlayers.innerHTML = '';
         
-        this.playersCircle.innerHTML = '';
-        this.playersArrows.innerHTML = '';
-        
-        const players = this.gameState.players;
-        const totalPlayers = players.length;
-        const currentPlayerIndex = this.gameState.currentPlayer;
-        const direction = this.gameState.direction || 1;
-        
-        // Handle turn timer logic
-        const currentPlayer = players[currentPlayerIndex];
-        if (currentPlayer) {
-            const isMyTurn = currentPlayer.id === this.socket.id;
-            if (isMyTurn) {
-                // Start timer if it's my turn and not skipped
-                if (!this.isSkipped()) {
-                    this.startTurnTimer();
-                } else {
-                    this.stopTurnTimer();
-                }
-            } else {
-                // Stop timer if not my turn
-                this.stopTurnTimer();
-            }
-        }
-        
-        // Calculate positions in a circle
-        const centerX = 50; // Percentage
-        const centerY = 50; // Percentage
-        const radius = 35; // Percentage from center
-        
-        players.forEach((player, index) => {
-            // Calculate angle for circular positioning
-            let angle;
-            if (totalPlayers === 2) {
-                // For 2 players: top and bottom
-                angle = index === 0 ? -90 : 90; // Top: -90deg, Bottom: 90deg
-            } else {
-                // For 3+: distribute evenly in circle
-                angle = (index * (360 / totalPlayers) - 90) * (Math.PI / 180); // Start from top
+        this.gameState.players.forEach((player, index) => {
+            if (player.id === this.socket.id) return;
+            
+            const playerDiv = document.createElement('div');
+            playerDiv.className = 'other-player';
+            if (index === this.gameState.currentPlayer) {
+                playerDiv.classList.add('current');
             }
             
-            // Convert angle to degrees for CSS
-            const angleDeg = totalPlayers === 2 
-                ? (index === 0 ? -90 : 90)
-                : (index * (360 / totalPlayers) - 90);
+            // Make player div clickable for hearts
+            playerDiv.style.cursor = 'pointer';
+            playerDiv.title = 'Click to send 💖';
+            playerDiv.addEventListener('click', () => {
+                this.sendHeartToPlayer(player.id, player.name);
+            });
             
-            // Calculate position
-            const x = centerX + radius * Math.cos(angle);
-            const y = centerY + radius * Math.sin(angle);
+            const name = document.createElement('div');
+            name.className = 'other-player-name';
+            name.textContent = player.name;
             
-            // Create circular player avatar
-            const playerAvatar = document.createElement('div');
-            playerAvatar.className = 'circular-player-avatar';
-            playerAvatar.style.left = `${x}%`;
-            playerAvatar.style.top = `${y}%`;
-            playerAvatar.style.transform = `translate(-50%, -50%)`;
+            const cardCount = document.createElement('div');
+            cardCount.className = 'card-count';
+            cardCount.textContent = `${player.handSize} cards`;
             
-            // Check if this is current player
-            const isCurrentPlayer = index === currentPlayerIndex;
-            if (isCurrentPlayer) {
-                playerAvatar.classList.add('current-turn');
-            }
+            playerDiv.appendChild(name);
+            playerDiv.appendChild(cardCount);
             
-            // Check if this is me
-            const isMe = player.id === this.socket.id;
-            if (isMe) {
-                playerAvatar.classList.add('my-player');
-            }
-            
-            // Create avatar circle
-            const avatarCircle = document.createElement('div');
-            avatarCircle.className = 'avatar-circle';
-            avatarCircle.textContent = player.name.charAt(0).toUpperCase();
-            
-            // Create name label
-            const nameLabel = document.createElement('div');
-            nameLabel.className = 'player-name-label';
-            nameLabel.textContent = isMe ? 'You' : player.name;
-            
-            // Create card count badge
-            const cardBadge = document.createElement('div');
-            cardBadge.className = 'card-count-badge';
-            cardBadge.textContent = player.handSize;
-            
-            // Create UNO indicator
             if (player.unoCall) {
-                const unoBadge = document.createElement('div');
-                unoBadge.className = 'uno-badge';
-                unoBadge.textContent = 'UNO!';
-                playerAvatar.appendChild(unoBadge);
+                const unoIndicator = document.createElement('div');
+                unoIndicator.className = 'uno-indicator';
+                unoIndicator.textContent = 'UNO!';
+                playerDiv.appendChild(unoIndicator);
             }
             
-            // Make clickable for hearts (if not me)
-            if (!isMe) {
-                playerAvatar.style.cursor = 'pointer';
-                playerAvatar.title = 'Click to send 💖';
-                playerAvatar.addEventListener('click', () => {
-                    this.sendHeartToPlayer(player.id, player.name);
-                });
-            }
-            
-            playerAvatar.appendChild(avatarCircle);
-            playerAvatar.appendChild(nameLabel);
-            playerAvatar.appendChild(cardBadge);
-            
-            this.playersCircle.appendChild(playerAvatar);
-        });
-        
-        // Draw connecting arrows showing direction (use setTimeout to ensure container dimensions are available)
-        setTimeout(() => {
-            this.drawPlayerArrows(players, currentPlayerIndex, direction, centerX, centerY, radius);
-        }, 0);
-    }
-
-    drawPlayerArrows(players, currentIndex, direction, centerX, centerY, radius) {
-        if (players.length < 2) return;
-        
-        // Use SVG viewBox coordinates (0-1000)
-        const svgSize = 1000;
-        const centerXPx = (centerX / 100) * svgSize;
-        const centerYPx = (centerY / 100) * svgSize;
-        const radiusPx = (radius / 100) * svgSize;
-        
-        const totalPlayers = players.length;
-        
-        players.forEach((player, index) => {
-            // Calculate next player index based on direction
-            let nextIndex;
-            if (direction === 1) {
-                nextIndex = (index + 1) % totalPlayers;
-            } else {
-                nextIndex = (index - 1 + totalPlayers) % totalPlayers;
-            }
-            
-            // Calculate angles
-            let angle1, angle2;
-            if (totalPlayers === 2) {
-                angle1 = (index === 0 ? -90 : 90) * (Math.PI / 180);
-                angle2 = (nextIndex === 0 ? -90 : 90) * (Math.PI / 180);
-            } else {
-                angle1 = (index * (360 / totalPlayers) - 90) * (Math.PI / 180);
-                angle2 = (nextIndex * (360 / totalPlayers) - 90) * (Math.PI / 180);
-            }
-            
-            // Calculate positions in pixels
-            const x1 = centerXPx + radiusPx * Math.cos(angle1);
-            const y1 = centerYPx + radiusPx * Math.sin(angle1);
-            const x2 = centerXPx + radiusPx * Math.cos(angle2);
-            const y2 = centerYPx + radiusPx * Math.sin(angle2);
-            
-            // Create arrow line
-            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            line.setAttribute('x1', x1);
-            line.setAttribute('y1', y1);
-            line.setAttribute('x2', x2);
-            line.setAttribute('y2', y2);
-            line.setAttribute('class', 'player-arrow');
-            
-            // Highlight arrow if this is current player
-            if (index === currentIndex) {
-                line.classList.add('active-arrow');
-            }
-            
-            // Calculate arrowhead position and angle
-            const dx = x2 - x1;
-            const dy = y2 - y1;
-            const arrowAngle = Math.atan2(dy, dx);
-            
-            // Create arrowhead at the end of the line, slightly inside the circle
-            const arrowSize = svgSize * 0.02; // 2% of SVG size
-            const arrowOffset = arrowSize * 1.5; // Offset from edge
-            const arrowX = x2 - arrowOffset * Math.cos(angle2);
-            const arrowY = y2 - arrowOffset * Math.sin(angle2);
-            
-            // Calculate arrowhead points
-            const arrowPoint1X = arrowX - arrowSize * Math.cos(arrowAngle - Math.PI / 6);
-            const arrowPoint1Y = arrowY - arrowSize * Math.sin(arrowAngle - Math.PI / 6);
-            const arrowPoint2X = arrowX - arrowSize * Math.cos(arrowAngle + Math.PI / 6);
-            const arrowPoint2Y = arrowY - arrowSize * Math.sin(arrowAngle + Math.PI / 6);
-            
-            const arrowhead = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-            arrowhead.setAttribute('points', 
-                `${arrowX},${arrowY} ` +
-                `${arrowPoint1X},${arrowPoint1Y} ` +
-                `${arrowPoint2X},${arrowPoint2Y}`
-            );
-            arrowhead.setAttribute('class', 'arrowhead');
-            if (index === currentIndex) {
-                arrowhead.classList.add('active-arrow');
-            }
-            
-            this.playersArrows.appendChild(line);
-            this.playersArrows.appendChild(arrowhead);
+            this.otherPlayers.appendChild(playerDiv);
         });
     }
 
